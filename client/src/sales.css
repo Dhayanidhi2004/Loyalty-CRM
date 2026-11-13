@@ -364,3 +364,4 @@
   .el-setup { margin: 0 18px 20px; }
   .el-top { flex-direction: column; }
 }
+.sp-btn.b-teal { background: #0d9488; } .sp-btn.b-teal:hover { background: #0f766e; }

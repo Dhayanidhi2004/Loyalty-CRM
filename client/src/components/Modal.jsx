@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 export default function Modal({ title, onClose, children, footer, wide = false }) {
@@ -13,7 +14,8 @@ export default function Modal({ title, onClose, children, footer, wide = false }
     };
   }, [onClose]);
 
-  return (
+  // rendered on <body> so a modal opened inside a card / tab is never clipped or covered by the page behind it
+  return createPortal(
     <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className={`modal${wide ? ' wide' : ''}`} role="dialog" aria-modal="true" aria-label={title}>
         <div className="modal-head">
@@ -25,6 +27,7 @@ export default function Modal({ title, onClose, children, footer, wide = false }
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-foot">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

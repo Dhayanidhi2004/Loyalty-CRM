@@ -3,6 +3,7 @@ import { Plus, Search, Trash2 } from 'lucide-react';
 import Shell from '../components/Shell';
 import { BackPill, Loading, StatusBadge } from '../components/Bits';
 import { RecordFormModal, RecordViewModal } from '../components/RecordModals';
+import CustomerAddBar from '../components/CustomerAdd';
 import { api } from '../api';
 import { useApp } from '../AppContext';
 import { csvColumns, downloadCsv, fmtDate } from '../format';
@@ -11,7 +12,7 @@ import { canCreate, canDelete, canEditRecord, levelOf } from '../access';
 const usDate = (v) => (v ? new Date(v).toLocaleDateString('en-US') : '—');
 const time = (v) => (v ? new Date(v).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—');
 
-// The table from the "Completed Enquiries" screen, reused wherever records are listed in rows.
+// The table from the "All Customers" screen, reused wherever records are listed in rows.
 export function FancyTable({ columns, rows, onRowClick, onDelete, emptyText, compact = false }) {
   return (
     <div className="fancy-wrap">
@@ -99,9 +100,9 @@ function useRecordList(moduleKey, query) {
   return { mod, items, setItems, load, remove, setViewing, setEditing, isAdmin, modals, user, level };
 }
 
-/* ---------------- All Customers -> "Completed Enquiries" ---------------- */
+/* ---------------- All Customers ---------------- */
 export function CustomersPage({ back, createdBy }) {
-  const query = createdBy ? { createdBy } : null;
+  const query = createdBy ? { createdBy, limit: 5000 } : { limit: 5000 };
   const { mod, items, load, remove, setViewing, setEditing, isAdmin, modals, level } = useRecordList('customers', query);
   const [search, setSearch] = useState('');
   useEffect(() => { load(); }, [load]);
@@ -121,18 +122,16 @@ export function CustomersPage({ back, createdBy }) {
       <div className="page bg-lilac">
         <div className="page-inner wide">
           <div className="head-row underlined">
-            <h1 className="title-dark">{mod?.title || 'Completed Enquiries'}</h1>
+            <h1 className="title-dark">{mod?.title || 'All Customers'}</h1>
             <BackPill to={back} />
           </div>
           <div className="big-search">
             <Search size={24} />
             <input placeholder="Search company, PAN, GST" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
-          {!isAdmin && canCreate(level) && (
-            <div className="table-tools"><button className="btn-new" onClick={() => setEditing({})}><Plus size={18} /> Add Customer</button></div>
-          )}
+          {canCreate(level) && <CustomerAddBar existing={items || []} onDone={() => load()} />}
           {items === null ? <Loading /> : (
-            <FancyTable columns={columns} rows={rows} onRowClick={setViewing} onDelete={isAdmin ? remove : null} emptyText={q ? 'No customers match your search.' : 'No completed enquiries yet.'} />
+            <FancyTable columns={columns} rows={rows} onRowClick={setViewing} onDelete={isAdmin ? remove : null} emptyText={q ? 'No customers match your search.' : 'No customers yet. Use Add Manually or Upload to add one.'} />
           )}
         </div>
       </div>

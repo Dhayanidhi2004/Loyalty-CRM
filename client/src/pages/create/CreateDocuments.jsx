@@ -226,7 +226,7 @@ function OptionalImg({ src, className, fallback = null }) {
 }
 
 // Company letterhead at the top of every proforma invoice (form, view and PDF)
-export function PiLetterhead() {
+export function PiLetterhead({ title = 'PROFORMA INVOICE' } = {}) {
   return (
     <>
       <header className="pf-brand">
@@ -238,7 +238,7 @@ export function PiLetterhead() {
         </div>
       </header>
       <div className="pf-gst">GST:{BRAND.gstin}</div>
-      <h2 className="pf-title">PROFORMA INVOICE</h2>
+      <h2 className="pf-title">{title}</h2>
     </>
   );
 }

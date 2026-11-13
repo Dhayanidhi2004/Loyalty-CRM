@@ -1,0 +1,49 @@
+/* Project Quotations — only the commercial-offer sheet is new; the rest reuses the project's own classes. */
+.pq-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.pq-bar h3 { margin: 0 auto 0 0; color: #4338ca; font-size: 22px; }
+.pq-count { background: #fff; border-radius: 10px; padding: 10px 18px; font-size: 17px; display: inline-block; box-shadow: 0 1px 4px rgba(0,0,0,.06); margin-bottom: 8px; }
+.pq-empty { text-align: center; padding: 40px; color: #6b7280; font-size: 18px; }
+.pq-result { margin-top: 26px; }
+.pq-sheet { overflow-x: auto; background: #fff; padding: 14px; border-radius: 10px; box-shadow: 0 8px 24px rgba(31,41,90,.1); }
+.pq-pdf { min-width: 760px; max-width: 900px; margin: 0 auto; border: 2px solid #000; font: 13px Calibri, Arial, sans-serif; color: #000; background: #fff; text-align: left; }
+.pq-b { font-weight: 700; } .pq-c { text-align: center; flex: 1; }
+.pq-cof { font-weight: 700; font-size: 15px; padding: 4px; border-bottom: 2px solid #000; text-align: center; }
+.pq-lg { display: flex; align-items: center; gap: 14px; padding: 6px 14px; border-bottom: 2px solid #000; }
+.pq-lg i { width: 64px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #c0262d, #6a3fa0, #19a8d6); color: #fff; font: 700 24px Arial; display: flex; align-items: center; justify-content: center; flex: none; }
+.pq-lg h2 { margin: 0; color: #e0262d; font: 900 30px Arial; text-shadow: 1px 1px 0 #7a1015; }
+.pq-lg p { margin: 2px 0; color: #1a3fd8; font-weight: 700; font-size: 12.5px; }
+.pq-gs { color: #c00000; font-weight: 700; padding: 2px 4px; border-bottom: 2px solid #000; }
+.pq-cg { display: flex; justify-content: space-between; gap: 10px; padding: 6px 14px; font-size: 14px; }
+.pq-ka { border-top: 2px solid #000; border-bottom: 1px solid #000; padding: 4px 10px; font-weight: 700; }
+.pq-ka p { margin: 3px 0 3px 14px; }
+.pq-pt { width: 100%; border-collapse: collapse; }
+.pq-pt th { background: #fde4cf; color: #f07a1a; font-size: 14px; padding: 4px; border: 1px solid #000; border-top: 0; text-align: center; }
+.pq-pt td { padding: 2px 6px; text-align: center; font-size: 13px; }
+.pq-pt td.vl { border-left: 1px solid #000; }
+.pq-pt td.pq-bd { font-weight: 700; }
+.pq-rw td { padding: 12px 6px; font-size: 15px; font-weight: 700; border-bottom: 1px solid #000; border-top: 1px solid #000; }
+.pq-hit { background: #fff59d; }
+.pq-note { background: #ff0; font-weight: 700; padding: 3px 10px; border-top: 1px solid #000; }
+.pq-ft { display: flex; border-top: 2px solid #000; }
+.pq-ft > div { flex: 1; }
+.pq-tc { padding: 4px 6px; }
+.pq-t { color: #12a150; font-weight: 700; font-size: 15px; }
+.pq-y { background: #ff0; margin: 2px 0; }
+.pq-tt { width: 36%; flex: none !important; border-left: 1px solid #000; }
+.pq-tt div { display: flex; justify-content: space-between; padding: 3px 10px; border-bottom: 1px solid #000; font-weight: 700; }
+.pq-bk { background: #92d050; border-top: 2px solid #000; border-right: 1px solid #000; text-align: center; font-weight: 700; padding: 4px; width: 64%; flex: none !important; }
+.pq-pk { color: #c026d3; font-weight: 700; padding: 4px 8px; border-top: 2px solid #000; text-align: center; }
+.pq-dl { display: flex; gap: 26px; align-items: center; padding: 6px 10px; font-weight: 700; }
+.pq-dl s { text-decoration: none; font: 700 18px Arial; }
+.pq-rd { color: #e60000; font-weight: 700; font-size: 17px; text-align: center; border-top: 2px solid #000; padding: 4px; }
+.pq-ce { outline: 0; border-bottom: 1px dashed #6366f1; background: rgba(238,242,255,.6); padding: 0 2px; min-width: 14px; display: inline-block; cursor: text; }
+.pq-ce:focus { background: #e0e7ff; }
+.pq-ce:empty:before { content: attr(data-p); color: #9ca3af; font-weight: 400; }
+.pq-x { border: 0; background: #fee2e2; color: #b91c1c; border-radius: 50%; width: 20px; height: 20px; line-height: 18px; cursor: pointer; padding: 0; }
+.pq-ml { white-space: pre-wrap; }
+.pq-bk .pq-ce { text-align: center; }
+.pq-rc { display: inline-flex; gap: 2px; align-items: center; }
+.pq-m { border: 0; background: #e0e7ff; color: #3730a3; border-radius: 50%; width: 20px; height: 20px; line-height: 18px; cursor: pointer; padding: 0; font-size: 12px; }
+.pq-m:disabled { opacity: .35; cursor: default; }
+.pq-del { color: #b91c1c !important; }
+@media print { .pq-bar, .sp-search { display: none; } }

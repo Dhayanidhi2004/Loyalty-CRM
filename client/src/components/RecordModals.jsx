@@ -148,7 +148,34 @@ function ItemsView({ f, value }) {
   );
 }
 
+// Values already saved in another module, offered as suggestions (modules.js `lookup`), e.g. enquiry numbers on a quotation.
+const lookupCache = {};
+function useLookup(lookup) {
+  const { user } = useApp();
+  const id = lookup ? `${lookup.module}.${lookup.field}` : '';
+  const [list, setList] = useState(lookupCache[id] || []);
+  useEffect(() => {
+    if (!lookup || lookupCache[id] || !levelOf(user, lookup.module)) return;
+    api(`/records/${lookup.module}?limit=2000`)
+      .then((r) => {
+        const seen = new Set();
+        const out = [];
+        for (const x of r.items) {
+          const v = String(x[lookup.field] ?? '').trim();
+          if (!v || seen.has(v)) continue;
+          seen.add(v);
+          out.push({ value: v, hint: lookup.hint ? x[lookup.hint] : '' });
+        }
+        lookupCache[id] = out;
+        setList(out);
+      })
+      .catch(() => {});
+  }, [id, lookup, user]);
+  return list;
+}
+
 export function Field({ f, value, onChange, moduleKey, record }) {
+  const looked = useLookup(f.lookup);
   const common = { id: f.key, className: 'inp', value: value ?? '', onChange: (e) => onChange(e.target.value) };
   let input;
   if (f.type === 'employee') input = <EmployeeSelect id={f.key} f={f} value={value} onChange={onChange} moduleKey={moduleKey} currentName={record?.[`${f.key}Name`]} />;
@@ -169,12 +196,13 @@ export function Field({ f, value, onChange, moduleKey, record }) {
           {...common}
           type={f.type === 'currency' ? 'number' : f.type}
           step={f.type === 'currency' ? '0.01' : f.type === 'number' ? 'any' : undefined}
-          placeholder={f.autoNumber ? 'Auto-generated if left blank' : f.suggestions ? 'Type or pick…' : ''}
-          list={f.suggestions ? `${f.key}-options` : undefined}
+          placeholder={f.autoNumber ? (f.lookup ? 'Pick an existing one, or leave blank to auto-generate' : 'Auto-generated if left blank') : f.suggestions || f.lookup ? 'Type or pick…' : ''}
+          list={f.suggestions || f.lookup ? `${f.key}-options` : undefined}
         />
-        {f.suggestions && (
+        {(f.suggestions || f.lookup) && (
           <datalist id={`${f.key}-options`}>
-            {f.suggestions.map((o) => <option key={o} value={o} />)}
+            {(f.suggestions || []).map((o) => <option key={o} value={o} />)}
+            {looked.map((o) => <option key={o.value} value={o.value}>{o.hint || ''}</option>)}
           </datalist>
         )}
       </>
