@@ -166,4 +166,4 @@ function extractLead(m) {
   };
 }
 
-module.exports = { extractLead, messageFromGmail, parseFrom, findPhone, findCompany, htmlToText, MIN_SCORE };
+module.exports = { extractLead, messageFromGmail, parseFrom, findPhone, findCompany, htmlToText, MIN_SCORE, COMPANY_SUFFIX };

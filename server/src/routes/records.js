@@ -4,6 +4,10 @@ const { requireAuth } = require('../auth');
 const { modules, CONVERTED, NOT_CONVERTED } = require('../modules');
 const { levelFor, can } = require('../roles');
 const { localDayRange, localDateToISO, generateNumber, financialYear, EMAIL_RE, ah } = require('../utils');
+const notify = require('../notifications');
+
+// Notifications must never make a save fail.
+const safely = (fn) => fn().catch((e) => console.error('notification failed:', e.message));
 
 router.use(requireAuth);
 router.param('id', (req, res, next, id) => (/^\d+$/.test(id) ? next() : res.status(404).json({ message: 'Record not found' })));
@@ -287,6 +291,130 @@ async function ensureCustomerFromLead(client, lead, userId) {
   await client.query('insert into crm_records (module, data, created_by) values ($1, $2, $3)', ['customers', data, userId]);
 }
 
+// POST /api/records/customers/bulk  { customers: [{ companyName, gst, pan, contactPerson, phone, email, address }] }
+// Used by "Add Customers from Documents" after the user has checked the rows. Invalid rows are reported and skipped,
+// customers that already exist (same GST or PAN; same company name when the row has neither) are counted and skipped.
+const BULK_MAX = 5000;
+const strOf = (v) => (v === null || v === undefined ? '' : String(v).trim());
+const customerKeys = (c) => {
+  const gst = strOf(c.gst).toUpperCase();
+  const pan = strOf(c.pan).toUpperCase();
+  const name = strOf(c.companyName).toLowerCase().replace(/\s+/g, ' ');
+  return gst || pan ? [gst && `g:${gst}`, pan && `p:${pan}`].filter(Boolean) : name ? [`n:${name}`] : [];
+};
+router.post('/customers/bulk', ah(async (req, res) => {
+  const mod = modules.customers;
+  const level = levelFor(req.user, 'customers');
+  if (!can.create(level)) return res.status(403).json({ message: `Your role can't add ${mod.label}` });
+  const list = req.body?.customers;
+  if (!Array.isArray(list) || !list.length) return res.status(400).json({ message: 'No customers to add' });
+  if (list.length > BULK_MAX) return res.status(400).json({ message: `Add at most ${BULK_MAX} customers per request` });
+
+  // everything that already exists (all users), as lookup keys
+  const seen = new Set();
+  for (const r of (await query("select data from crm_records where module = 'customers'")).rows) {
+    const gst = strOf(r.data?.gst).toUpperCase();
+    const pan = strOf(r.data?.pan).toUpperCase();
+    const name = strOf(r.data?.companyName).toLowerCase().replace(/\s+/g, ' ');
+    if (gst) seen.add(`g:${gst}`);
+    if (pan) seen.add(`p:${pan}`);
+    if (name) seen.add(`n:${name}`);
+  }
+
+  const good = [];
+  const invalid = [];
+  let invalidCount = 0;
+  let duplicates = 0;
+  list.forEach((raw, i) => {
+    const row = raw && typeof raw === 'object' ? { ...raw } : {};
+    if (row.gst) row.gst = strOf(row.gst).toUpperCase();
+    if (row.pan) row.pan = strOf(row.pan).toUpperCase();
+    const { data, errors } = clean(mod, row);
+    if (errors.length) {
+      invalidCount += 1;
+      if (invalid.length < 50) invalid.push(`Row ${i + 1}${data.companyName ? ` (${data.companyName})` : ''}: ${[...new Set(errors)].join(', ')}`);
+      return;
+    }
+    const keys = customerKeys(data);
+    if (keys.some((k) => seen.has(k))) { duplicates += 1; return; }
+    keys.forEach((k) => seen.add(k));
+    good.push(data);
+  });
+
+  if (good.length) {
+    await tx(async (client) => {
+      // Cus IDs: random like the single-add form, checked against existing ones in one query instead of one per row
+      const taken = new Set((await client.query("select data->>'cusId' as id from crm_records where module = 'customers' and data ? 'cusId'")).rows.map((r) => r.id));
+      const { code, digits } = mod.fields.find((f) => f.key === 'cusId').autoNumber;
+      for (const d of good) {
+        let id;
+        do id = `${code}-${String(require('crypto').randomInt(0, 10 ** digits)).padStart(digits, '0')}`; while (taken.has(id));
+        taken.add(id);
+        d.cusId = id;
+      }
+      await client.query(
+        "insert into crm_records (module, data, created_by) select 'customers', d, $2 from jsonb_array_elements($1::jsonb) as d",
+        [JSON.stringify(good), req.user.id]
+      );
+    });
+  }
+  res.status(201).json({ added: good.length, duplicates, invalidCount, invalid });
+}));
+
+// POST /api/records/inventory/bulk  { products: [...], updateExisting: true }
+// Used by Inventory > Upload Excel after the user has checked the rows. Matches products by Item Code (any case).
+// Existing item + updateExisting -> only the filled-in columns change; otherwise it counts as a duplicate and is skipped.
+const INV_NUMERIC = ['price', 'inward', 'outward', 'minStock'];
+router.post('/inventory/bulk', ah(async (req, res) => {
+  const mod = modules.inventory;
+  if (!can.create(levelFor(req.user, 'inventory'))) return res.status(403).json({ message: "Your role can't add inventory" });
+  const list = req.body?.products;
+  if (!Array.isArray(list) || !list.length) return res.status(400).json({ message: 'No products to add' });
+  if (list.length > 20000) return res.status(400).json({ message: 'Add at most 20,000 products per request' });
+  const updateExisting = req.body.updateExisting !== false;
+
+  const existing = new Map();
+  for (const r of (await query("select id, data from crm_records where module = 'inventory'")).rows) {
+    const k = strOf(r.data?.itemCode).toLowerCase();
+    if (k) existing.set(k, { id: r.id, data: r.data });
+  }
+  const seenNew = new Set();
+  const fresh = []; const changes = []; const invalid = [];
+  let invalidCount = 0; let duplicates = 0;
+  list.forEach((raw, i) => {
+    const row = raw && typeof raw === 'object' ? raw : {};
+    const { data, errors } = clean(mod, row);
+    for (const k of INV_NUMERIC) if (typeof data[k] === 'number' && data[k] < 0) errors.push(`${mod.fields.find((f) => f.key === k).label} must be a positive number`);
+    if (errors.length) {
+      invalidCount += 1;
+      if (invalid.length < 50) invalid.push(`Row ${i + 1}${data.itemCode ? ` (${data.itemCode})` : ''}: ${[...new Set(errors)].join(', ')}`);
+      return;
+    }
+    const key = strOf(data.itemCode).toLowerCase();
+    if (seenNew.has(key)) { duplicates += 1; return; }
+    seenNew.add(key);
+    const old = existing.get(key);
+    if (!old) { fresh.push(data); return; }
+    if (!updateExisting) { duplicates += 1; return; }
+    const patch = Object.fromEntries(Object.entries(data).filter(([, v]) => v !== null && v !== undefined));
+    changes.push({ id: old.id, before: old.data, data: computeDerived(mod, { ...old.data, ...patch }) });
+  });
+
+  await tx(async (client) => {
+    for (const c of changes) await client.query('update crm_records set data = $1, updated_at = now() where id = $2', [c.data, c.id]);
+    if (fresh.length) {
+      const rows = fresh.map((d) => computeDerived(mod, d));
+      await client.query(
+        "insert into crm_records (module, data, created_by) select 'inventory', d, $2 from jsonb_array_elements($1::jsonb) as d",
+        [JSON.stringify(rows), req.user.id]
+      );
+      fresh.splice(0, fresh.length, ...rows);
+    }
+  });
+  await safely(() => notify.notifyLowStock(null, [...fresh.map((data) => ({ data })), ...changes.map((c) => ({ data: c.data, before: c.before }))], req.user.id));
+  res.status(201).json({ added: fresh.length, updated: changes.length, duplicates, invalidCount, invalid });
+}));
+
 router.post('/:module', ah(async (req, res) => {
   const { mod, level } = getModule(req, res);
   if (!mod) return;
@@ -324,7 +452,13 @@ router.post('/:module', ah(async (req, res) => {
     }
     return rows[0].id;
   });
-  res.status(201).json(shape(await one(`${SELECT} where r.id = $1`, [id])));
+  const created = await one(`${SELECT} where r.id = $1`, [id]);
+  await safely(async () => {
+    await notify.recordCreated(null, req.params.module, created.data, req.user.id, req.user.name);
+    if (req.params.module === 'leads' && created.data.assignedTo) await notify.leadAssigned(null, created.data, req.user.id);
+    if (req.params.module === 'inventory') await notify.notifyLowStock(null, [{ data: created.data }], req.user.id);
+  });
+  res.status(201).json(shape(created));
 }));
 
 router.put('/:module/:id', ah(async (req, res) => {
@@ -366,6 +500,13 @@ router.put('/:module/:id', ah(async (req, res) => {
     if (req.params.module === 'quotations' && patch.enquiryNo) await markLeadQuoted(client, data.enquiryNo);
   });
 
+  await safely(async () => {
+    if (req.params.module === 'leads') {
+      if ('assignedTo' in patch && String(patch.assignedTo ?? '') !== String(row.data.assignedTo ?? '') && data.assignedTo) await notify.leadAssigned(null, data, req.user.id);
+      if (statusChanged) await notify.leadStageChanged(null, data, row.created_by, status, req.user.id);
+    }
+    if (req.params.module === 'inventory') await notify.notifyLowStock(null, [{ data, before: row.data }], req.user.id);
+  });
   res.json(shape(await one(`${SELECT} where r.id = $1`, [row.id])));
 }));
 

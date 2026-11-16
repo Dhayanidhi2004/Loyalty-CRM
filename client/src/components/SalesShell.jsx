@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Activity, ArrowLeft, Building2, Calendar, FileText, Mail, MapPin, Phone, Radio, Tag, UserCheck } from 'lucide-react';
+import { Activity, ArrowLeft, Building2, Calendar, FileText, Mail, MapPin, Phone, Radio, Reply, Tag, UserCheck } from 'lucide-react';
 import Shell from './Shell';
 import Modal from './Modal';
 import { StatusBadge } from './Bits';
 import { RecordFormModal, useAssignable } from './RecordModals';
+import EmailConversation from './EmailConversation';
 import { useApp } from '../AppContext';
 import { api, fileUrl } from '../api';
 import { initials, fmtDate } from '../format';
@@ -12,7 +13,7 @@ import { LEAD_STAGES, canCreate, canDelete, canEditAll, canEditRecord, homeFor, 
 
 export const SALES_HOME = '/SaleteamDasboard/Dasboard';
 
-// Black frame + "Enterprise CRM / <page>" bar with the employee ID, as on the sales team and Lead Filler screens.
+// Black frame + "<page>" bar with the employee ID, as on the sales team and Lead Filler screens.
 export default function SalesShell({ subtitle, children, back = true }) {
   const { user } = useApp();
   return (
@@ -22,8 +23,7 @@ export default function SalesShell({ subtitle, children, back = true }) {
           <div className="dash-id">
             <span className="sales-logo"><Activity size={26} strokeWidth={2.4} /></span>
             <div>
-              <h2>Enterprise CRM</h2>
-              <p>{subtitle}</p>
+              <h2>{subtitle}</h2>
             </div>
           </div>
           <div className="sales-user">
@@ -59,6 +59,7 @@ export function LeadDetailModal({ lead, onClose, onChanged, onDelete }) {
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState(false);
   const [quoting, setQuoting] = useState(false);
+  const [emailing, setEmailing] = useState(false); // enquiry that came from Gmail: conversation + reply
   const dirty = stage !== lead.status || String(assignee) !== String(lead.assignedTo ?? '');
   const mayQuote = canCreate(levelOf(user, 'quotations'));
   // Lead Fillers enter enquiries; the sales team moves them through the stages.
@@ -87,6 +88,7 @@ export function LeadDetailModal({ lead, onClose, onChanged, onDelete }) {
         onSaved={(u) => { setEditing(false); onChanged(u); }} />
     );
   }
+  if (emailing) return <EmailConversation emailLeadId={lead.emailLeadId} onClose={() => setEmailing(false)} />;
   if (quoting) {
     return (
       <RecordFormModal
@@ -115,6 +117,7 @@ export function LeadDetailModal({ lead, onClose, onChanged, onDelete }) {
         <>
           {onDelete && canDelete(level) && <button className="btn btn-danger" onClick={() => onDelete(lead)}>Delete</button>}
           <span style={{ flex: 1 }} />
+          {/^\d+$/.test(String(lead.emailLeadId ?? '')) && <button className="btn btn-soft" onClick={() => setEmailing(true)}><Reply size={16} /> Reply by Email</button>}
           {mayQuote && <button className="btn btn-soft" onClick={() => setQuoting(true)}><FileText size={16} /> Create Quotation</button>}
           {mayEdit && <button className="btn btn-soft" onClick={() => setEditing(true)}>Edit Details</button>}
           {mayStage && <button className="btn btn-green" disabled={!dirty || busy} onClick={save}>{busy ? 'Saving…' : 'Save'}</button>}

@@ -1,0 +1,21 @@
+{
+  "name": "crm-qa",
+  "private": true,
+  "description": "Automated tests for the whole CRM (API, browser, load). See README.md",
+  "scripts": {
+    "test:api": "node api.test.js",
+    "test:ui": "node run-ui.js",
+    "test:all": "node api.test.js && node run-ui.js",
+    "test:draft": "node draft-quotation.test.js",
+    "test:features": "node crm-features.test.js",
+    "test:sweep": "node full-sweep.test.js",
+    "test:load": "node load-test.js 80 60"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.3.16",
+    "@testing-library/dom": "^10.0.0",
+    "@testing-library/react": "^16.0.0",
+    "jsdom": "^25.0.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -4,6 +4,7 @@ import { AlertTriangle, CalendarDays, ChevronLeft, ChevronRight, DollarSign, Eye
 import Shell from '../components/Shell';
 import { BackPill, Loading } from '../components/Bits';
 import { RecordFormModal } from '../components/RecordModals';
+import { PdfLink } from './DocumentPdf';
 import { CREATE_PAGES } from './create/CreateDocuments';
 import { canCreate, canDelete, canEditRecord, levelOf } from '../access';
 import { api } from '../api';
@@ -92,7 +93,8 @@ function DocCard({ doc, mod, open, onToggle, onDelete, onEdit }) {
         ) : (
           <button className="doc-btn" onClick={onToggle}><Eye size={18} /> View Details</button>
         )}
-        {onEdit && <button className="doc-btn" onClick={() => onEdit(doc)}><Pencil size={16} /> Edit</button>}
+        <PdfLink kind="po" id={doc.id} className="doc-btn pdf-btn" icon>PDF</PdfLink>
+        {onEdit && <button className="doc-btn edit-btn" onClick={() => onEdit(doc)}><Pencil size={16} /> Edit</button>}
       </footer>
     </article>
   );
@@ -183,7 +185,7 @@ export default function DocumentsPage({ moduleKey, back, createdBy }) {
                     key={doc.id} doc={doc} mod={mod} open={openId === doc.id}
                     onToggle={() => setOpenId(openId === doc.id ? null : doc.id)}
                     onDelete={canDelete(level) ? remove : null}
-                    onEdit={!isAdmin && canEditRecord(level, doc, user) ? setEditing : null}
+                    onEdit={canEditRecord(level, doc, user) ? setEditing : null}
                   />
                 ))}
               </div>

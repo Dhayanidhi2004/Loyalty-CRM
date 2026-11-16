@@ -5,7 +5,7 @@ import { BackPill } from '../components/Bits';
 import { api } from '../api';
 import { useApp } from '../AppContext';
 
-// /admin/resetPassword (quick action): the admin enters the Employee ID (LOY-xxxxxx) and a new password.
+// /admin/resetPassword (quick action): the admin enters the employee's email and a new password.
 // /admin/resetEmail and /admin/resetPassword?id=<employee> are opened from an employee's profile page.
 export default function ResetPage({ mode }) {
   const isEmail = mode === 'email';
@@ -18,7 +18,7 @@ export default function ResetPage({ mode }) {
   const [name, setName] = useState('');
   const [names, setNames] = useState([]);
   const [people, setPeople] = useState([]);
-  const [code, setCode] = useState('');
+  const [target, setTarget] = useState(''); // employee email (Reset Password quick action)
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -31,7 +31,7 @@ export default function ResetPage({ mode }) {
     } else {
       api('/employees?includeAdmins=1').then((list) => {
         setNames([...new Set(list.map((e) => e.name))]);
-        setPeople(list.filter((e) => e.emp_code));
+        setPeople(list);
       }).catch(() => {});
     }
   }, [id]);
@@ -40,15 +40,16 @@ export default function ResetPage({ mode }) {
     e.preventDefault();
     setMsg(null);
     if (!id && isEmail && !name.trim()) return setMsg({ err: 'Please enter the employee name.' });
-    if (!id && !isEmail && !code.trim()) return setMsg({ err: 'Please enter the Employee ID.' });
+    if (!id && !isEmail && !target.trim()) return setMsg({ err: 'Please enter the employee email.' });
+    if (!id && !isEmail && !/^\S+@\S+\.\S+$/.test(target.trim())) return setMsg({ err: 'Please enter a valid employee email.' });
     if (!isEmail && password.length < 6) return setMsg({ err: 'Password must be at least 6 characters.' });
     if (!isEmail && password !== confirm) return setMsg({ err: 'Passwords do not match.' });
     setBusy(true);
     try {
-      const target = id ? { id } : isEmail ? { name: name.trim() } : { empCode: code.trim() };
+      const who = id ? { id } : isEmail ? { name: name.trim() } : { email: target.trim() };
       const r = isEmail
-        ? await api('/employees/reset-email', { method: 'POST', body: { ...target, newEmail: email } })
-        : await api('/employees/reset-password', { method: 'POST', body: { ...target, newPassword: password } });
+        ? await api('/employees/reset-email', { method: 'POST', body: { ...who, newEmail: email } })
+        : await api('/employees/reset-password', { method: 'POST', body: { ...who, newPassword: password } });
       notify(r.message);
       navigate(back);
     } catch (err) {
@@ -58,9 +59,9 @@ export default function ResetPage({ mode }) {
     }
   }
 
-  const showName = isEmail; // password: Employee ID box from the quick action, nothing extra from a profile
-  const wanted = code.trim().toUpperCase().replace(/^(\d+)$/, 'LOY-$1');
-  const match = people.find((p) => p.emp_code?.toUpperCase() === wanted);
+  const showName = isEmail; // password: employee email box from the quick action, nothing extra from a profile
+  const wanted = target.trim().toLowerCase();
+  const match = people.find((p) => p.email?.toLowerCase() === wanted);
 
   return (
     <Shell>
@@ -83,15 +84,15 @@ export default function ResetPage({ mode }) {
 
             {!isEmail && !id && (
               <div className="mint-field">
-                <label className="mint-label" htmlFor="m-code">Employee ID</label>
+                <label className="mint-label" htmlFor="m-target">Employee Email</label>
                 <input
-                  id="m-code" className="mint-input" placeholder="Enter employee ID, e.g. LOY-325332" list="employee-codes" autoComplete="off"
-                  value={code} onChange={(e) => setCode(e.target.value)}
+                  id="m-target" className="mint-input" type="email" placeholder="Enter employee email, e.g. ravi@company.com" list="employee-emails" autoComplete="off"
+                  value={target} onChange={(e) => setTarget(e.target.value)}
                 />
-                <datalist id="employee-codes">{people.map((p) => <option key={p.id} value={p.emp_code}>{p.name}</option>)}</datalist>
-                {code.trim() && (
+                <datalist id="employee-emails">{people.map((p) => <option key={p.id} value={p.email}>{p.name}</option>)}</datalist>
+                {target.trim() && (
                   <div className={`mint-who${match ? '' : ' none'}`}>
-                    {match ? <>Employee: <b>{match.name}</b> · {match.role === 'admin' ? 'Admin' : match.designation || 'Employee'} · {match.email}</> : 'No employee with this ID yet'}
+                    {match ? <>Employee: <b>{match.name}</b> · {match.role === 'admin' ? 'Admin' : match.designation || 'Employee'}{match.emp_code ? ` · ${match.emp_code}` : ''}</> : 'No employee with this email yet'}
                   </div>
                 )}
               </div>

@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const BUCKET = process.env.SUPABASE_BUCKET || 'crm-files';
-const localDir = path.join(__dirname, '..', 'uploads');
+const localDir = process.env.UPLOADS_DIR || path.join(__dirname, '..', 'uploads');
 
 let supabase = null;
 if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
