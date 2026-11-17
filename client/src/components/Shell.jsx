@@ -4,6 +4,7 @@ import { BRAND } from '../config';
 import { useApp } from '../AppContext';
 import { fileUrl } from '../api';
 import { initials } from '../format';
+import NotificationBell from './NotificationBell';
 
 function Brand() {
   const [imgOk, setImgOk] = useState(true);
@@ -28,22 +29,29 @@ function Brand() {
 //   variant="dark"  -> black frame, light-grey title (login and the dashboards)
 //   variant="light" -> white frame, dark title (every inner page)
 export default function Shell({ children, tinted = false, variant = 'light' }) {
-  const { logout } = useApp();
+  const { user, logout } = useApp();
   const navigate = useNavigate();
   return (
     <>
       <header className="site-header">
         <Brand />
         <h1 className={`site-title${variant === 'light' ? ' strong' : ''}`}>{BRAND.companyName}</h1>
-        <button
-          className="logout-btn"
-          onClick={() => {
-            logout();
-            navigate('/login');
-          }}
-        >
-          Logout
-        </button>
+        {user ? (
+          <div className="hdr-right">
+            <NotificationBell />
+            <button
+              className="logout-btn"
+              onClick={() => {
+                logout();
+                navigate('/login');
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        ) : (
+          <span className="logout-btn" aria-hidden="true" style={{ visibility: 'hidden' }}>Logout</span>
+        )}
       </header>
       <div className={`frame${variant === 'light' ? ' light' : ''}`}>
         <div className={`frame-inner${tinted ? ' tinted' : ''}`}>{children}</div>
@@ -52,7 +60,7 @@ export default function Shell({ children, tinted = false, variant = 'light' }) {
   );
 }
 
-// "● Enterprise CRM / Admin Dashboard ........ Admin (A)"
+// "● Admin Dashboard ........ Admin (A)"
 export function DashBar({ subtitle, children }) {
   const { user } = useApp();
   const isAdmin = user?.role === 'admin';
@@ -62,8 +70,7 @@ export function DashBar({ subtitle, children }) {
         <div className="dash-id">
           <span className="dash-dot" />
           <div>
-            <h2>{BRAND.appTitle}</h2>
-            <p>{subtitle}</p>
+            <h2>{subtitle}</h2>
           </div>
           {children}
         </div>

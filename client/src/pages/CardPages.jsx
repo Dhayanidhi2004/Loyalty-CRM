@@ -8,6 +8,7 @@ import { api } from '../api';
 import { useApp } from '../AppContext';
 import { canCreate, canDelete, canEditRecord, levelOf } from '../access';
 import { CREATE_PAGES } from './create/CreateDocuments';
+import { PdfLink } from './DocumentPdf';
 
 /* ---------- helpers ---------- */
 export const rupees = (v, dp = 0) => (v === null || v === undefined || v === '' ? '₹' : `₹${Number(v).toLocaleString('en-IN', { minimumFractionDigits: dp, maximumFractionDigits: 2 })}`);
@@ -111,6 +112,7 @@ export function InvoiceDetail({ pi, onBack, onDelete, onEdit }) {
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <button className="back-list" onClick={onBack}>Back to List</button>
         {onEdit && <button className="back-list" onClick={onEdit}>Edit</button>}
+        <PdfLink kind="pi" id={pi.id} className="back-list">View as PDF</PdfLink>
         {onDelete && <button className="back-list danger" onClick={onDelete}>Delete</button>}
       </div>
       <article className="inv-card">
@@ -249,7 +251,7 @@ export function InvoicePage({ back, createdBy }) {
                     <div><span>Ref Date</span><b>{ymdToDmy(pi.refDate)}</b></div>
                     <div><span>Total Payable</span><b className="green">{rupees(pi.totalPayable)}</b></div>
                   </div>
-                  <footer><button className="view-more">View Details</button></footer>
+                  <footer className="mini-actions"><button className="view-more">View Details</button><PdfLink kind="pi" id={pi.id} className="mini-btn pdf">PDF</PdfLink>{canEditRecord(L.level, pi, L.user) && <button className="mini-btn edit" onClick={(e) => { e.stopPropagation(); L.setEditing(pi); }}>Edit</button>}</footer>
                 </article>
               ))}
             </div>
@@ -271,6 +273,7 @@ export function QuotationDetail({ q, onBack, onDelete, onEdit }) {
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 40 }}>
         <button className="back-list" onClick={onBack}><ChevronLeft size={18} style={{ verticalAlign: -3 }} /> Back to List</button>
         {onEdit && <button className="back-list" onClick={onEdit}>Edit</button>}
+        <PdfLink kind="quotation" id={q.id} className="back-list">View as PDF</PdfLink>
         {onDelete && <button className="back-list danger" onClick={onDelete}>Delete</button>}
       </div>
       <article className="inv-card">
@@ -332,6 +335,7 @@ export function QuotationDetail({ q, onBack, onDelete, onEdit }) {
 }
 
 export function QuotationPage({ back, createdBy }) {
+  const navigate = useNavigate();
   const L = useModuleList('quotations', createdBy);
   const [openId, setOpenId] = useState(null);
   const open = L.items?.find((x) => x.id === openId);
@@ -343,7 +347,10 @@ export function QuotationPage({ back, createdBy }) {
           <div className="head-row center-title">
             <div><BackPill to={back} /></div>
             <h1 className="title-mgmt">Quotation Management</h1>
-            <div className="head-actions">{L.newButton}</div>
+            <div className="head-actions">
+              <button className="btn-refresh" onClick={() => navigate('/project-quotations')}>Project Quotations</button>
+              {canCreate(L.level) && <button className="btn-new" style={{ marginTop: 0 }} onClick={() => L.setEditing({ gst: 18, status: 'Draft' })}><Plus size={18} /> Add Quotation Manually</button>}
+            </div>
           </div>
           {L.items === null ? <Loading /> : open ? (
             <QuotationDetail
@@ -381,7 +388,7 @@ export function QuotationPage({ back, createdBy }) {
                       <Box label="Discount" value={q.discount} />
                       <Box label="GST" value={plain(q.gst) ? `${plain(q.gst)}%` : null} />
                     </div>
-                    <button className="view-more" style={{ marginTop: 40 }} onClick={() => setOpenId(q.id)}>View More</button>
+                    <div className="mini-actions" style={{ marginTop: 40 }}><button className="view-more" onClick={() => setOpenId(q.id)}>View More</button><PdfLink kind="quotation" id={q.id} className="mini-btn pdf">PDF</PdfLink>{canEditRecord(L.level, q, L.user) && <button className="mini-btn edit" onClick={() => L.setEditing(q)}>Edit</button>}</div>
                   </div>
                 </article>
               ))}

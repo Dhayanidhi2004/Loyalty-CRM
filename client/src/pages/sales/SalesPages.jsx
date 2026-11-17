@@ -4,6 +4,9 @@ import { Building2, ExternalLink, Eye, FileText, Mail, Package, Plus, Search, Us
 import { CREATE_PAGES, PiSheet } from '../create/CreateDocuments';
 import SalesShell, { LeadDetailModal, SALES_HOME } from '../../components/SalesShell';
 import { RecordFormModal, RecordViewModal } from '../../components/RecordModals';
+import CustomerAddBar from '../../components/CustomerAdd';
+import InventoryAddBar from '../../components/InventoryAdd';
+import { PdfLink } from '../DocumentPdf';
 import { Loading, StatusBadge } from '../../components/Bits';
 import { InvoiceDetail, QuotationDetail, rupees } from '../CardPages';
 import { api, fileUrl } from '../../api';
@@ -23,7 +26,7 @@ function useRecords(moduleKey, query = '') {
   const load = useCallback(async () => {
     setError('');
     try {
-      setItems((await api(`/records/${moduleKey}?limit=2000${query}`)).items);
+      setItems((await api(`/records/${moduleKey}?limit=5000${query}`)).items);
     } catch (e) {
       setError(e.message);
       setItems([]);
@@ -33,7 +36,7 @@ function useRecords(moduleKey, query = '') {
   return { items, setItems, error, load };
 }
 
-function Panel({ title, icon: Icon, actions, children }) {
+export function Panel({ title, icon: Icon, actions, children }) {
   return (
     <section className="sp-panel">
       <header>
@@ -176,7 +179,7 @@ export function SalesCustomers() {
 
   return (
     <SalesShell subtitle="Customer Details">
-      <Panel title="Customer Details" actions={canCreate(level) && <button className="sp-btn b-blue" onClick={() => setEditing({})}><Plus size={18} /> Add Customer</button>}>
+      <Panel title="Customer Details" actions={canCreate(level) && <CustomerAddBar variant="sales" existing={items || []} onDone={load} />}>
         <div className="sp-search"><Search size={22} /><input placeholder="Search by Company Name, PAN, or GSTN..." value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <State items={items} error={error} onRetry={load} loadingText="Loading customers…" emptyText="No customers yet.">
           <div className="sp-table-wrap">
@@ -228,7 +231,7 @@ export function SalesInventory() {
           <>
             {levelOf(user, 'poRequests') && <button className="sp-btn b-blue" onClick={() => navigate('/SaleteamDasboard/purchaseOrder')}><FileText size={18} /> Purchase Order</button>}
             {levelOf(user, 'pi') && <button className="sp-btn b-purple" onClick={() => navigate('/SaleteamDasboard/invoices')}><FileText size={18} /> Performa Invoice</button>}
-            {canCreate(level) && <button className="sp-btn b-green" onClick={() => setEditing({ inward: 0, outward: 0 })}><Plus size={18} /> Add Product</button>}
+            {canCreate(level) && <InventoryAddBar variant="sales" onDone={load} />}
           </>
         }
       >
@@ -327,7 +330,8 @@ export function SalesInvoices() {
                       <td><span className="pi-status">{pi.status}</span></td>
                       <td className="r nowrap">
                         <button className="pi-btn view" onClick={() => setOpenId(pi.id)}>View</button>
-                        <a className="pi-btn pdf" href={`/print/pi/${pi.id}`} target="_blank" rel="noreferrer">PDF</a>
+                        <PdfLink kind="pi" id={pi.id} className="pi-btn pdf">PDF</PdfLink>
+                        {canEditRecord(level, pi, user) && <button className="pi-btn view" onClick={() => navigate(`/proformaInvoice/create?id=${pi.id}`)}>Edit</button>}
                         {canDelete(level) && <button className="pi-btn del" onClick={() => remove(pi)}>Delete</button>}
                       </td>
                     </tr>
@@ -344,6 +348,7 @@ export function SalesInvoices() {
 
 /* -------------------------------- Latest Quotations -------------------------------- */
 export function SalesQuotations() {
+  const navigate = useNavigate();
   const { user, modules, notify } = useApp();
   const level = levelOf(user, 'quotations');
   const { items, setItems, error, load } = useRecords('quotations');
@@ -370,7 +375,10 @@ export function SalesQuotations() {
           onDelete={canDelete(level) ? () => remove(open) : null}
           onEdit={canEditRecord(level, open, user) ? () => setEditing(open) : null} />
       ) : (
-        <Panel title="Latest Quotations" icon={FileText} actions={canCreate(level) && <button className="sp-btn b-purple" onClick={() => setEditing({ gst: 18 })}><Plus size={18} /> New Quotation</button>}>
+        <Panel title="Latest Quotations" icon={FileText} actions={<>
+          <button className="sp-btn b-blue" onClick={() => navigate('/project-quotations')}><FileText size={18} /> Project Quotations</button>
+          {canCreate(level) && <button className="sp-btn b-purple" onClick={() => setEditing({ gst: 18 })}><Plus size={18} /> New Quotation</button>}
+        </>}>
           <State items={items} error={error} onRetry={load} loadingText="Loading quotations…" emptyText="No quotations yet.">
             <div className="sp-table-wrap">
               <table className="sp-table">
@@ -387,6 +395,8 @@ export function SalesQuotations() {
                       <td>{usDate(q.createdAt)}</td>
                       <td className="nowrap">
                         <button className="sp-view" onClick={() => setOpenId(q.id)}><Eye size={18} /> View</button>
+                        <PdfLink kind="quotation" id={q.id} className="pi-btn pdf" >PDF</PdfLink>
+                        {canEditRecord(level, q, user) && <button className="pi-btn view" onClick={() => setEditing(q)}>Edit</button>}
                         {canDelete(level) && <button className="pi-btn del" style={{ marginLeft: 8 }} onClick={() => remove(q)}>Delete</button>}
                       </td>
                     </tr>

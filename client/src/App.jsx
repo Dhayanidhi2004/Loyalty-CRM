@@ -15,6 +15,8 @@ import { SalesCustomers, SalesInventory, SalesInvoices, SalesLeadsByOutcome, Sal
 import { EmailLeadsPage, EnterEnquiryPage, LeadFillerDashboard, LeadFillerEnquiries } from './pages/leadfiller/LeadFillerPages';
 import ServiceDashboard from './pages/service/ServiceDashboard';
 import { CreateProformaInvoice, CreatePurchaseOrder } from './pages/create/CreateDocuments';
+import DocumentPdfPage from './pages/DocumentPdf';
+import ProjectQuotationsPage from './pages/ProjectQuotations';
 import Shell from './components/Shell';
 import { Loading } from './components/Bits';
 
@@ -49,6 +51,9 @@ export default function App() {
       <Route path="/admin/companyResources" element={<Guard role="admin"><CompanyResourcesPage /></Guard>} />
       <Route path="/admin/records/:module" element={<Guard role="admin"><ModulePage /></Guard>} />
       <Route path="/admin/employees/:id" element={<Guard role="admin"><EmployeeProfile /></Guard>} />
+      {/* Email Leads from every connected Gmail inbox, and the enquiry form they open */}
+      <Route path="/admin/emailLeads" element={<Guard role="admin"><EmailLeadsPage admin /></Guard>} />
+      <Route path="/admin/enterEnquiry" element={<Guard role="admin"><EnterEnquiryPage /></Guard>} />
       <Route path="/employee/dashboard" element={<Guard role="employee"><EmployeeDashboard /></Guard>} />
       <Route path="/employee/records/:module" element={<Guard role="employee"><ModulePage /></Guard>} />
       <Route path="/employee/companyResources" element={<Guard role="employee"><CompanyResourcesPage /></Guard>} />
@@ -74,8 +79,10 @@ export default function App() {
       <Route path="/leadfiller/leadEnquiries" element={<Guard dash="leads"><LeadFillerEnquiries /></Guard>} />
       <Route path="/leadfiller/emailLeads" element={<Guard dash="leads"><EmailLeadsPage /></Guard>} />
       {/* full-page forms: Create Purchase Order / Proforma Invoice (?id= to edit) */}
+      <Route path="/project-quotations" element={<Guard><ProjectQuotationsPage /></Guard>} />
       <Route path="/purchaseOrder/create" element={<Guard><CreatePurchaseOrder /></Guard>} />
       <Route path="/proformaInvoice/create" element={<Guard><CreateProformaInvoice /></Guard>} />
+      <Route path="/pdf/:kind/:id" element={<Guard><DocumentPdfPage /></Guard>} />
       <Route path="/print/pi/:id" element={<Guard><PrintInvoice /></Guard>} />
       <Route path="*" element={<Home />} />
     </Routes>
