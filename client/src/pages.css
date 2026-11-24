@@ -542,7 +542,7 @@ textarea.cd-input { height: auto; min-height: 90px; padding: 12px 16px; resize: 
 .pf-create { height: 54px; padding: 0 40px; border: 0; border-radius: 6px; background: #9ca3af; color: #fff; font: 400 20px var(--font-ui); display: inline-flex; align-items: center; gap: 10px; }
 .pf-create.on { background: #4f46e5; }
 .pf-create.on:hover { background: #4338ca; }
-@media (max-width: 900px) {
+@media screen and (max-width: 900px) {
   .pf-doc { padding: 0 14px 24px; }
   .pf-brand { flex-direction: column; text-align: center; }
   .pf-brand h1 { font-size: 26px; }
@@ -573,7 +573,8 @@ textarea.cd-input { height: auto; min-height: 90px; padding: 12px 16px; resize: 
   .pf-print .pf-doc { box-shadow: none; max-width: none; padding: 0 10px; }
   .pf-print .pf-consignee { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .pf-print .pf-items th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  @page { margin: 10mm; }
+  @page { size: A4; margin: 0; } /* no margin = no browser date / URL header and footer on the PDF */
+  .pf-print { padding: 10mm 10mm 0 !important; }
 }
 
 /* ---- Add Manually / Import JSON (All Customers) ---- */
@@ -606,7 +607,11 @@ textarea.cd-input { height: auto; min-height: 90px; padding: 12px 16px; resize: 
 a.back-list { text-decoration: none; display: inline-flex; align-items: center; }
 a.pi-btn { text-decoration: none; display: inline-flex; align-items: center; }
 @media print { .pdf-bar { display: none; } }
+<<<<<<< HEAD
 @media print { .pf-print .pf-sheet { zoom: 0.58; } }
+=======
+@media print { .pf-print .pf-sheet { zoom: 0.62; } }
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
 
 /* customer upload (PDF / Excel / image) */
 .imp-drop { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; border: 2px dashed #c7d2fe; background: #f5f7ff; border-radius: 12px; padding: 16px; margin-bottom: 14px; }

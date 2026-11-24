@@ -90,17 +90,28 @@ describe('the reported bug: Edit / Add item from the card list (project quotatio
 });
 
 describe('editing every part of the sheet', () => {
+<<<<<<< HEAD
   it('edits fixed parts (company, bank, HSN/UOM/Qty, terms…) and persists them', async () => {
     await mount();
     click(btn(cardOf('NK Industries'), 'Edit')); await waitFor(() => expect(field('cust')).toBeTruthy());
     const set = { co: 'ACME AUTOMATION', coAddr: 'Line A\nLine B', coContact: 'Ph: 1', gstin: 'GST:99XYZ', cust: 'NK Industries Ltd', addr: 'Plot 5\nGuindy', ref: 'LAP/OFF/X/1', date: '14-10-2026', kind: 'Hello\nWorld', proj: 'Panel X', hsn: '8537', uom: 'Nos', qty: '2', price: '1000', bomLabel: 'PARTS', note: 'Be quick', disc: 'None', delivery: '3 days', pay: '30% advance', valid: '10 days', warr: '3 years', gst: '12', bank: 'A : 1\nB : 2\nC : 3', thanks: 'Thanks!', support: 'Call us' };
+=======
+  it('edits every value on the quotation (customer, bank, HSN/UOM/Qty, terms…) and persists them', async () => {
+    await mount();
+    click(btn(cardOf('NK Industries'), 'Edit')); await waitFor(() => expect(field('cust')).toBeTruthy());
+    const set = { cust: 'NK Industries Ltd', addr: 'Plot 5\nGuindy', ref: 'LAP/OFF/X/1', date: '14-10-2026', enq: 'ENQ-42', proj: 'Panel X', hsn: '8537', uom: 'Nos', qty: '2', price: '1000', bomLabel: 'PARTS', note: 'Be quick', disc: 'None', delivery: '3 days', pay: '30% advance', valid: '10 days', warr: '3 years', gst: '12', bank: 'A : 1\nB : 2\nC : 3' };
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
     for (const [k, v] of Object.entries(set)) { if (!field(k)) throw new Error(`no editable field ${k}`); type(field(k), v); }
     await save();
     const q = (await list()).find((x) => x.ref === 'LAP/OFF/X/1');
     expect(q).toMatchObject({ ...set, qty: 2, price: 1000, gst: 12 });
     // read-only view shows the new values
     const t = sheetText();
+<<<<<<< HEAD
     for (const v of ['ACME AUTOMATION', 'GST:99XYZ', 'Panel X', '8537', 'PARTS', 'None', '3 years', 'Thanks!', 'Call us']) expect(t).toContain(v);
+=======
+    for (const v of ['LOYALTY AUTOMATION PVT.LTD.', 'QUOTATION', 'ENQ-42', 'Panel X', '8537', 'PARTS', 'None', '3 years', '30% advance', 'Be quick']) expect(t).toContain(v);
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
   });
   it('totals follow Unit Price × Qty and GST', async () => {
     await mount();
@@ -109,15 +120,25 @@ describe('editing every part of the sheet', () => {
     await save();
     const rec = (await list()).find((x) => x.cust.includes('Rambal'));
     const t = sheetText();
+<<<<<<< HEAD
     expect(t).toContain('3000.00'); expect(t).toContain('540'); expect(t).toContain('3540');
+=======
+    expect(t).toContain('₹ 3,000.00'); expect(t).toContain('₹ 540.00'); expect(t).toContain('₹ 3,540.00'); expect(t).toContain('Three Thousand Five Hundred Forty');
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
   });
   it('totals refresh as soon as you leave the Price / Qty / GST cell (before saving)', async () => {
     await mount();
     click(btn(cardOf('Rambal'), 'Edit')); await waitFor(() => expect(field('cust')).toBeTruthy());
     type(field('price'), '₹ 2,000'); type(field('qty'), '2'); type(field('gst'), '5');
+<<<<<<< HEAD
     await waitFor(() => expect(ui.container.querySelector('.pq-tt').textContent).toContain('4000.00'));
     const tt = ui.container.querySelector('.pq-tt').textContent;
     expect(tt).toContain('200'); expect(tt).toContain('4200'); expect(field('price').textContent).toBe('2000');
+=======
+    await waitFor(() => expect(ui.container.querySelector('.pq-tt').textContent).toContain('₹ 4,000.00'));
+    const tt = ui.container.querySelector('.pq-tt').textContent;
+    expect(tt).toContain('₹ 200.00'); expect(tt).toContain('₹ 4,200.00'); expect(field('price').textContent).toBe('2000');
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
   });
   it('customer shortcut (rambal) fills name and address', async () => {
     await mount();

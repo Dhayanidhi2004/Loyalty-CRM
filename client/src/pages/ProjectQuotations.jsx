@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+<<<<<<< HEAD
 import { useNavigate } from 'react-router-dom';
 import { FileText, Search } from 'lucide-react';
+=======
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { FileDown, FileText, Search } from 'lucide-react';
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
 import Shell from '../components/Shell';
 import SalesShell from '../components/SalesShell';
 import { BackPill, Loading } from '../components/Bits';
@@ -8,10 +13,19 @@ import { Panel } from './sales/SalesPages';
 import { api } from '../api';
 import { useApp } from '../AppContext';
 import { canCreate, canDelete, levelOf } from '../access';
+<<<<<<< HEAD
 import './project-quotations.css';
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 const money = (n) => Number(n || 0).toFixed(2);
+=======
+import { amountInWords } from '../format';
+import { PiFooter, PiLetterhead } from './create/CreateDocuments';
+import './project-quotations.css';
+
+const inr = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+const inr2 = (n) => `₹ ${Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
 
 // Everything printed on the sheet is editable. These are what a quotation shows until it is changed.
 const DEF = {
@@ -34,6 +48,14 @@ const calc = (q) => {
   const g = Math.round((sub * (q.gst || 0)) / 100);
   return { g, t: sub + g, sub };
 };
+<<<<<<< HEAD
+=======
+// Payment and Validity are printed twice (header and terms): typing in one copy updates the other.
+const twins = (e) => {
+  const el = e.currentTarget;
+  el.closest('.pq-pdf')?.querySelectorAll(`[data-k="${el.dataset.k}"]`).forEach((x) => { if (x !== el) x.textContent = el.textContent; });
+};
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
 const blank = (e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } };
 const NUM = ['price', 'gst', 'qty'];
 const newQuotation = () => {
@@ -53,6 +75,7 @@ function findQuotations(items, term) {
   return { list, words };
 }
 
+<<<<<<< HEAD
 // The quotation laid out like the Loyalty Automation commercial offer. In edit mode every piece of text on the
 // sheet itself becomes editable (no separate form); grab() in the page reads it back.
 function Sheet({ q, ed, hl, onRemove, onMove, onInsert, onCust, onNum }) {
@@ -60,6 +83,16 @@ function Sheet({ q, ed, hl, onRemove, onMove, onInsert, onCust, onNum }) {
   // k = field, p = placeholder, ml = may hold several lines (Enter makes a new line)
   const E = (k, p, ml) => (ed
     ? <span className={`pq-ce${ml ? ' pq-ml' : ''}`} contentEditable="plaintext-only" suppressContentEditableWarning data-k={k} data-p={p || ''} onKeyDown={ml ? undefined : blank} onBlur={k === 'cust' ? onCust : NUM.includes(k) ? onNum : undefined}>{String(val(q, k))}</span>
+=======
+// The quotation laid out exactly like every other quotation / PDF in the CRM (same letterhead, TO band, item table,
+// totals and footer). In edit mode every value on the sheet becomes editable in place; grab() in the page reads it back.
+export function Sheet({ q, ed, hl, onRemove, onMove, onInsert, onCust, onNum }) {
+  const c = calc(q);
+  const priced = Number(q.price) > 0;
+  // k = field, p = placeholder, ml = may hold several lines (Enter makes a new line)
+  const E = (k, p, ml) => (ed
+    ? <span className={`pq-ce${ml ? ' pq-ml' : ''}`} contentEditable="plaintext-only" suppressContentEditableWarning data-k={k} data-p={p || ''} onKeyDown={ml ? undefined : blank} onBlur={k === 'cust' ? onCust : NUM.includes(k) ? onNum : twins}>{String(val(q, k))}</span>
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
     : <span className={ml ? 'pq-ml' : undefined}>{String(val(q, k))}</span>);
   const C = (n, f, v) => (ed
     ? <span className="pq-ce" contentEditable="plaintext-only" suppressContentEditableWarning data-i={n} data-f={f} onKeyDown={blank}>{String(v ?? '')}</span>
@@ -67,6 +100,7 @@ function Sheet({ q, ed, hl, onRemove, onMove, onInsert, onCust, onNum }) {
   const hit = (i) => hl && hl.some((w) => i.d.toLowerCase().includes(w));
   const last = q.items.length - 1;
   return (
+<<<<<<< HEAD
     <div className="pq-sheet"><div className="pq-pdf">
       <div className="pq-cof">COMMERCIAL OFFER</div>
       <div className="pq-lg"><i>LA</i><div className="pq-c"><h2>{E('co', 'company name')}</h2><p>{E('coAddr', 'company address', true)}</p><p>{E('coContact', 'phone / mail', true)}</p></div></div>
@@ -111,6 +145,79 @@ function Sheet({ q, ed, hl, onRemove, onMove, onInsert, onCust, onNum }) {
       <div className="pq-dl">Authorised Dealers of <s style={{ color: '#2e9a3e' }}>Schneider Electric</s><s style={{ color: '#1976d2' }}>▲DELTA</s><s style={{ color: '#222' }}>PHŒNIX CONTACT</s><s style={{ color: '#1a3a8a' }}>MOTOVARIO</s></div>
       <div className="pq-rd">{E('support', 'support line', true)}</div>
     </div></div>
+=======
+    <div className="pq-sheet">
+      <div className="pf-doc pf-sheet pq-pdf">
+        <PiLetterhead title="QUOTATION" />
+        <div className="pf-meta">
+          <label><b>Reference No:</b> <span>{E('ref', 'ref no')}</span></label>
+          <label><b>Date:</b> <span>{E('date', 'dd-mm-yyyy')}</span></label>
+          <label><b>Enquiry No:</b> <span>{E('enq', 'enquiry no')}</span></label>
+          <label><b>Validity:</b> <span>{E('valid', 'validity')}</span></label>
+        </div>
+        <section className="pf-consignee">
+          <div>
+            <div className="pf-cap">TO</div>
+            <div className="pf-name">{E('cust', 'customer name')}</div>
+            {(q.addr || ed) && <div className="pq-to-addr">{E('addr', 'address', true)}</div>}
+          </div>
+          <div className="pf-cons-right"><label><b>Payment Due:</b> <span>{E('pay', 'payment terms')}</span></label></div>
+        </section>
+        <table className="pf-items">
+          <thead><tr><th>S.No</th><th>Description</th><th>HSN</th><th>Unit Description</th><th>UOM</th><th className="r">Qty</th><th className="r">Unit Price</th><th className="r">Total</th></tr></thead>
+          <tbody>
+            <tr>
+              <td className="sno">1</td>
+              <td className="txt">{E('proj', 'project name')}</td>
+              <td className="txt">{E('hsn', 'HSN')}</td>
+              <td className="txt">{(q.items.length > 0 || ed) && <b>{E('bomLabel', 'heading')}</b>}</td>
+              <td className="txt">{E('uom', 'UOM')}</td>
+              <td className="r txt">{E('qty', 'qty')}</td>
+              <td className="r txt">{ed ? E('price', 'unit price') : (priced ? Number(q.price).toLocaleString('en-IN') : '')}</td>
+              <td className="r tot">{priced ? inr2(c.sub) : ''}</td>
+            </tr>
+            {q.items.map((i, n) => (
+              <tr key={n} className="pq-bom">
+                <td className="sno">{ed && (
+                  <span className="pq-rc">
+                    <button type="button" className="pq-x" title="Remove row" onClick={() => onRemove(n)}>✕</button>
+                    <button type="button" className="pq-m" title="Move up" disabled={n === 0} onClick={() => onMove(n, -1)}>↑</button>
+                    <button type="button" className="pq-m" title="Move down" disabled={n === last} onClick={() => onMove(n, 1)}>↓</button>
+                    <button type="button" className="pq-m" title="Insert row below" onClick={() => onInsert(n)}>+</button>
+                  </span>
+                )}</td>
+                <td className={`txt${hit(i) ? ' pq-hit' : ''}`}>{C(n, 'd', i.d)}</td>
+                <td className="txt">{C(n, 'h', i.h)}</td>
+                <td className="txt" />
+                <td className="txt">{C(n, 'u', i.u)}</td>
+                <td className="r txt">{C(n, 'q', i.q)}</td>
+                <td /><td />
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="pf-bottom">
+          <div className="pf-terms">
+            <h4>Terms &amp; Conditions:</h4>
+            <p>1. Payment: {E('pay', 'payment terms')}</p>
+            <p>2. Validity: {E('valid', 'validity')}</p>
+            <p>3. Warranty: {E('warr', 'warranty')}</p>
+            <p>4. Delivery: {q.delivery || ed ? E('delivery', 'add delivery') : '—'}</p>
+            {(q.disc || ed) && <p>5. Discount: {E('disc', 'discount')}</p>}
+            {(q.note || ed) && <p className="pq-tnote"><b>Note:</b> {E('note', 'add note', true)}</p>}
+            {(val(q, 'bank') || ed) && <div className="pq-bank"><b>Bank Details:</b><br />{E('bank', 'bank details', true)}</div>}
+          </div>
+          <div className="pf-sum pq-tt">
+            <div><span>Items Total:</span><span>{priced ? inr2(c.sub) : '—'}</span></div>
+            <div><span>GST Amount ( {ed ? E('gst', '18') : Number(q.gst || 0)} %):</span><span>{priced ? inr2(c.g) : 'Extra'}</span></div>
+            <div className="grand"><span>TOTAL:</span><span>{priced ? inr2(c.t) : '—'}</span></div>
+            {priced && <div className="words"><b>Amount In Words:</b><b>{amountInWords(c.t)}</b></div>}
+          </div>
+        </div>
+        <PiFooter />
+      </div>
+    </div>
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
   );
 }
 
@@ -129,21 +236,47 @@ export default function ProjectQuotationsPage() {
   const [draft, setDraft] = useState(null); // the quotation being edited, in place
   const [saving, setSaving] = useState(false);
   const root = useRef(null);
+<<<<<<< HEAD
+=======
+  const [params, setParams] = useSearchParams();
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
 
   useEffect(() => {
     if (!level) return;
     api('/project-quotations').then((r) => setItems(r.items)).catch((e) => { setError(e.message); setItems([]); });
   }, [level]);
 
+<<<<<<< HEAD
+=======
+  // /project-quotations?edit=5 (Edit on the PDF page) opens that quotation straight in edit mode
+  useEffect(() => {
+    const id = Number(params.get('edit'));
+    if (!items || !id) return;
+    const q = items.find((x) => x.id === id);
+    if (q) { setOpenId(q.id); if (mayEdit) setDraft(JSON.parse(JSON.stringify(q))); }
+    setParams({}, { replace: true });
+  }, [items, params, setParams, mayEdit]);
+
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
   const found = useMemo(() => (items ? findQuotations(items, term) : null), [items, term]);
 
   // Reads what is typed on the sheet back into the draft.
   function grab() {
     const d = { ...draft, items: draft.items.map((i) => ({ ...i })) };
+<<<<<<< HEAD
     root.current.querySelectorAll('[data-k]').forEach((e) => {
       const k = e.dataset.k; const v = e.textContent.replace(/\u00a0/g, ' ').trim();
       d[k] = NUM.includes(k) ? parseFloat(v.replace(/[^0-9.]/g, '')) || 0 : v;
     });
+=======
+    const got = {};
+    root.current.querySelectorAll('[data-k]').forEach((e) => {
+      const k = e.dataset.k; const v = e.textContent.replace(/\u00a0/g, ' ').trim();
+      const x = NUM.includes(k) ? parseFloat(v.replace(/[^0-9.]/g, '')) || 0 : v;
+      if (!(k in got) || String(x) !== String(val(draft, k))) got[k] = x; // a field shown twice: the edited copy wins
+    });
+    Object.assign(d, got);
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
     root.current.querySelectorAll('[data-i]').forEach((e) => {
       const i = d.items[e.dataset.i]; const f = e.dataset.f; const v = e.textContent.trim();
       i[f] = f === 'q' ? parseFloat(v) || 0 : v;
@@ -219,6 +352,10 @@ export default function ProjectQuotationsPage() {
   ) : (
     <>
       {openId !== q.id && <button className="view-more" onClick={() => setOpenId(q.id)}>Open</button>}
+<<<<<<< HEAD
+=======
+      <a className="back-list pq-pdf-btn" href={`/pdf/project/${q.id}`} target="_blank" rel="noreferrer"><FileDown size={16} /> PDF</a>
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
       {mayEdit && <button className="view-more" onClick={() => startEdit(q)}>Edit</button>}
       {mayEdit && <button className="back-list" onClick={() => startNew(q)}>Duplicate</button>}
       {mayDelete && <button className="back-list pq-del" onClick={() => remove(q)}>Delete</button>}

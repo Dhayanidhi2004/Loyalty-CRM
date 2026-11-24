@@ -22,6 +22,7 @@ export const LF = {
 };
 // the same Email Leads / enquiry form screens inside the admin login
 export const ADMIN_EMAIL = { email: '/admin/emailLeads', enter: '/admin/enterEnquiry', list: '/admin/records/leads' };
+<<<<<<< HEAD
 // Email Leads + enquiry form for the other logins; "list" is where each one views its enquiries
 const SHARED_EMAIL = { email: '/emailLeads', enter: '/emailLeads/enquiry' };
 const LIST_FOR = { sales: '/SaleteamDasboard/Dasboard', service: '/ServiceProject/Dashboard', employee: '/employee/records/leads' };
@@ -30,6 +31,9 @@ const pathsFor = (user) => {
   if (user?.dashboard === 'leads') return LF;
   return { ...SHARED_EMAIL, list: LIST_FOR[user?.dashboard] || LIST_FOR.employee };
 };
+=======
+const pathsFor = (user) => (user?.role === 'admin' ? ADMIN_EMAIL : LF);
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
 
 const CLOSED = [CONVERTED, NOT_CONVERTED];
 const TABS = [['all', 'All'], ['assigned', 'Assigned'], ['quoted', 'Quoted'], ['closed', 'Closed']];
@@ -328,7 +332,10 @@ const when = (v) => (v ? new Date(v).toLocaleString('en-IN', { day: '2-digit', m
 export function EmailLeadsPage({ admin = false }) {
   const { notify, user } = useApp();
   const P = pathsFor(user);
+<<<<<<< HEAD
   const mayEnquire = canCreate(levelOf(user, 'leads')); // turning an email into an enquiry needs lead-create access
+=======
+>>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
   const scope = admin ? '?scope=all' : '';
   const [inbox, setInbox] = useState(''); // admin: show one inbox only
   const navigate = useNavigate();
