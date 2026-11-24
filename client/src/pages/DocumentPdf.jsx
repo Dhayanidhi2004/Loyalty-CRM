@@ -13,11 +13,11 @@ import { Sheet as ProjectSheet } from './ProjectQuotations';
 
 // One PDF view for every purchase order, proforma invoice and quotation.
 export const PDF_KINDS = {
-  po: { module: 'poRequests', label: 'Purchase Order', numberKey: 'docNumber', edit: (id) => `/purchaseOrder/create?id=${id}` },
-  pi: { module: 'pi', label: 'Proforma Invoice', numberKey: 'piNumber', edit: (id) => `/proformaInvoice/create?id=${id}` },
-  quotation: { module: 'quotations', label: 'Quotation', numberKey: 'referenceNo', edit: null }, // edited in a pop-up
+  po: { module: 'poRequests', label: 'Purchase Order', title: 'PURCHASE ORDER', numberKey: 'docNumber', edit: (id) => `/purchaseOrder/create?id=${id}` },
+  pi: { module: 'pi', label: 'Proforma Invoice', title: 'PROFORMA INVOICE', numberKey: 'piNumber', edit: (id) => `/proformaInvoice/create?id=${id}` },
+  quotation: { module: 'quotations', label: 'Quotation', title: 'QUOTATION', numberKey: 'referenceNo', edit: null }, // edited in a pop-up
   // Project Quotations page: same quotation layout, edited on that page
-  project: { module: 'quotations', label: 'Quotation', numberKey: 'ref', url: (id) => `/project-quotations/${id}`, edit: (id) => `/project-quotations?edit=${id}` },
+  project: { module: 'quotations', label: 'Quotation', title: 'QUOTATION', numberKey: 'ref', url: (id) => `/project-quotations/${id}`, edit: (id) => `/project-quotations?edit=${id}` },
 };
 export const pdfPath = (kind, id) => `/pdf/${kind}/${id}`;
 
@@ -38,7 +38,7 @@ function PoSheet({ po }) {
   const items = po.products || [];
   return (
     <div className="pf-doc pf-sheet">
-      <PiLetterhead title="PURCHASE ORDER" />
+      <PiLetterhead title={PDF_KINDS.po.title} />
       <div className="pf-meta">
         <label><b>PO No:</b> <span>{po.docNumber}</span></label>
         <label><b>PO Date:</b> <span>{dmy(po.createdAt)}</span></label>
@@ -91,16 +91,13 @@ function QuotationSheet({ q }) {
   const items = q.products || [];
   return (
     <div className="pf-doc pf-sheet">
-      <PiLetterhead title="QUOTATION" />
-      <div className="pf-meta">
+      <PiLetterhead title={PDF_KINDS.quotation.title} />
+      <div className="pf-meta two">
         <label><b>Reference No:</b> <span>{q.referenceNo}</span></label>
         <label><b>Date:</b> <span>{dmy(q.createdAt)}</span></label>
-        <label><b>Enquiry No:</b> <span>{q.enquiryNo || ''}</span></label>
-        <label><b>Validity:</b> <span>{q.validity || ''}</span></label>
       </div>
-      <section className="pf-consignee">
+      <section className="pf-consignee solo">
         <div><div className="pf-cap">TO</div><div className="pf-name">{q.customerName}</div></div>
-        <div className="pf-cons-right"><label><b>Payment Due:</b> <span>{q.paymentDue || ''}</span></label></div>
       </section>
       <table className="pf-items">
         <thead><tr><th>S.No</th><th>Description</th><th>HSN</th><th>Unit Description</th><th>UOM</th><th className="r">Qty</th><th className="r">Unit Price</th><th className="r">Total</th></tr></thead>

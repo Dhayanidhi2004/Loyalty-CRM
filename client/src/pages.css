@@ -682,3 +682,10 @@ a.pi-btn { text-decoration: none; display: inline-flex; align-items: center; }
   .pf-meta { grid-template-columns: 1fr 1fr 1fr 1.7fr; gap: 10px; font-size: 14px; }
   .pf-gst { text-align: center; }
 }
+
+/* ---- Quotation / PO / PI PDFs: shorter header row, blue TO box without side field, highlighted Terms & Conditions ---- */
+.pf-meta.two { grid-template-columns: 1fr 1fr; }
+.pf-consignee.solo { grid-template-columns: 1fr; }
+.pf-sheet .pf-terms { background: #fffbeb; border: 1px solid #fcd34d; border-left: 5px solid #f59e0b; border-radius: 6px; padding: 12px 16px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.pf-sheet .pf-terms h4 { display: inline-block; background: #fde68a; color: #78350f; padding: 3px 10px; border-radius: 4px; margin: 0 0 8px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+@media print { .pf-meta.two { grid-template-columns: 1fr 1fr; } .pf-sheet .pf-terms, .pf-sheet .pf-terms h4 { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }

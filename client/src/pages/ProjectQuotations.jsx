@@ -78,19 +78,16 @@ export function Sheet({ q, ed, hl, onRemove, onMove, onInsert, onCust, onNum }) 
     <div className="pq-sheet">
       <div className="pf-doc pf-sheet pq-pdf">
         <PiLetterhead title="QUOTATION" />
-        <div className="pf-meta">
+        <div className="pf-meta two">
           <label><b>Reference No:</b> <span>{E('ref', 'ref no')}</span></label>
           <label><b>Date:</b> <span>{E('date', 'dd-mm-yyyy')}</span></label>
-          <label><b>Enquiry No:</b> <span>{E('enq', 'enquiry no')}</span></label>
-          <label><b>Validity:</b> <span>{E('valid', 'validity')}</span></label>
         </div>
-        <section className="pf-consignee">
+        <section className="pf-consignee solo">
           <div>
             <div className="pf-cap">TO</div>
             <div className="pf-name">{E('cust', 'customer name')}</div>
             {(q.addr || ed) && <div className="pq-to-addr">{E('addr', 'address', true)}</div>}
           </div>
-          <div className="pf-cons-right"><label><b>Payment Due:</b> <span>{E('pay', 'payment terms')}</span></label></div>
         </section>
         <table className="pf-items">
           <thead><tr><th>S.No</th><th>Description</th><th>HSN</th><th>Unit Description</th><th>UOM</th><th className="r">Qty</th><th className="r">Unit Price</th><th className="r">Total</th></tr></thead>

@@ -422,7 +422,7 @@ export function PrintInvoice() {
   }, [id]);
   useEffect(() => {
     if (!pi) return;
-    document.title = pi.piNumber.replace(/\//g, '-');
+    document.title = `Proforma Invoice-${String(pi.piNumber || '').replace(/[\\/]/g, '-')}`;
     const t = setTimeout(() => window.print(), 400);
     return () => clearTimeout(t);
   }, [pi]);
