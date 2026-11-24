@@ -27,3 +27,5 @@ dist-ssr
 server/.env
 =======
 >>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
+
+server/.env
