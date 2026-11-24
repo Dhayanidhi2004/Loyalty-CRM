@@ -13,11 +13,7 @@ router.param('id', (_req, res, next, id) => (/^\d+$/.test(id) ? next() : res.sta
 const level = (req) => levelFor(req.user, 'quotations');
 
 const TEXT = ['ref', 'date', 'cust', 'proj', 'delivery', 'pay', 'valid', 'warr'];
-<<<<<<< HEAD
-const LONG = { addr: 600, note: 600, kind: 600, bank: 800, co: 120, coAddr: 300, coContact: 300, gstin: 40, hsn: 12, uom: 20, disc: 200, bomLabel: 40, thanks: 300, support: 300 };
-=======
 const LONG = { enq: 120, addr: 600, note: 600, kind: 600, bank: 800, co: 120, coAddr: 300, coContact: 300, gstin: 40, hsn: 12, uom: 20, disc: 200, bomLabel: 40, thanks: 300, support: 300 };
->>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
 const LONE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
 
 function safe(v, max, keepLines) {
@@ -53,8 +49,6 @@ router.get('/', ah(async (req, res) => {
   res.json({ items: rows.map(shape) });
 }));
 
-<<<<<<< HEAD
-=======
 router.get('/:id', ah(async (req, res) => {
   if (!can.read(level(req))) return res.status(403).json({ message: "Your role doesn't have access to Project Quotations" });
   const row = await one('select id, data, updated_at from crm_project_quotations where id = $1', [Number(req.params.id)]);
@@ -62,7 +56,6 @@ router.get('/:id', ah(async (req, res) => {
   res.json(shape(row));
 }));
 
->>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
 router.post('/', ah(async (req, res) => {
   if (!can.create(level(req))) return res.status(403).json({ message: "Your role can't add project quotations" });
   const d = clean(req.body);

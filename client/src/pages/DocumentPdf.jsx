@@ -7,25 +7,17 @@ import { Loading } from '../components/Bits';
 import { api } from '../api';
 import { useApp } from '../AppContext';
 import { amountInWords } from '../format';
-<<<<<<< HEAD
-import { canEditRecord, levelOf } from '../access';
-import { homeFor } from './Login';
-=======
 import { canCreate, canEditRecord, levelOf } from '../access';
 import { homeFor } from './Login';
 import { Sheet as ProjectSheet } from './ProjectQuotations';
->>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
 
 // One PDF view for every purchase order, proforma invoice and quotation.
 export const PDF_KINDS = {
   po: { module: 'poRequests', label: 'Purchase Order', numberKey: 'docNumber', edit: (id) => `/purchaseOrder/create?id=${id}` },
   pi: { module: 'pi', label: 'Proforma Invoice', numberKey: 'piNumber', edit: (id) => `/proformaInvoice/create?id=${id}` },
   quotation: { module: 'quotations', label: 'Quotation', numberKey: 'referenceNo', edit: null }, // edited in a pop-up
-<<<<<<< HEAD
-=======
   // Project Quotations page: same quotation layout, edited on that page
   project: { module: 'quotations', label: 'Quotation', numberKey: 'ref', url: (id) => `/project-quotations/${id}`, edit: (id) => `/project-quotations?edit=${id}` },
->>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
 };
 export const pdfPath = (kind, id) => `/pdf/${kind}/${id}`;
 
@@ -155,11 +147,7 @@ export default function DocumentPdfPage() {
 
   const load = useCallback(() => {
     if (!cfg) return;
-<<<<<<< HEAD
-    api(`/records/${cfg.module}/${id}`).then(setRec).catch((e) => setError(e.message));
-=======
     api(cfg.url ? cfg.url(id) : `/records/${cfg.module}/${id}`).then(setRec).catch((e) => setError(e.message));
->>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
   }, [cfg, id]);
   useEffect(() => { load(); }, [load]);
   useEffect(() => { // the saved PDF takes its file name from the page title
@@ -170,12 +158,8 @@ export default function DocumentPdfPage() {
   if (error) return <div className="center-msg">{error}</div>;
   if (!rec) return <Loading text="Preparing document…" />;
 
-<<<<<<< HEAD
-  const canEdit = canEditRecord(levelOf(user, cfg.module), rec, user);
-=======
   const lvl = levelOf(user, cfg.module);
   const canEdit = kind === 'project' ? canCreate(lvl) : canEditRecord(lvl, rec, user);
->>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
   const edit = () => (cfg.edit ? navigate(cfg.edit(id)) : setEditing(true));
   const back = () => (window.opener ? window.close() : navigate(-1) || navigate(homeFor(user)));
 
@@ -190,10 +174,7 @@ export default function DocumentPdfPage() {
       {kind === 'po' && <PoSheet po={rec} />}
       {kind === 'pi' && <PiSheet pi={rec} />}
       {kind === 'quotation' && <QuotationSheet q={rec} />}
-<<<<<<< HEAD
-=======
       {kind === 'project' && <div className="pq-print"><ProjectSheet q={{ ...rec, items: rec.items || [] }} /></div>}
->>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
       {editing && modules?.quotations && (
         <RecordFormModal moduleKey="quotations" mod={modules.quotations} record={rec} onClose={() => setEditing(false)} onSaved={() => { setEditing(false); load(); }} />
       )}

@@ -14,7 +14,6 @@ const ROUTES = {
   },
   sales: {
     lead: '/SaleteamDasboard/Dasboard', quotation: '/SaleteamDasboard/quotations', productRequest: '/SaleteamDasboard/productRequests',
-<<<<<<< HEAD
     poRequest: '/SaleteamDasboard/purchaseOrder', inventory: '/SaleteamDasboard/inventory', quotationRequest: '/SaleteamDasboard/Dasboard', emailLead: '/emailLeads',
   },
   leads: { lead: '/leadfiller/leadEnquiries', emailLead: '/leadfiller/emailLeads' },
@@ -23,15 +22,6 @@ const ROUTES = {
     lead: '/employee/records/leads', quotation: '/employee/records/quotations', quotationRequest: '/employee/records/quotationRequests',
     productRequest: '/employee/records/productRequests', poRequest: '/employee/records/poRequests', inventory: '/employee/records/inventory',
     emailLead: '/emailLeads',
-=======
-    poRequest: '/SaleteamDasboard/purchaseOrder', inventory: '/SaleteamDasboard/inventory', quotationRequest: '/SaleteamDasboard/Dasboard',
-  },
-  leads: { lead: '/leadfiller/leadEnquiries', emailLead: '/leadfiller/emailLeads' },
-  service: { lead: '/ServiceProject/Dashboard', inventory: '/ServiceProject/inventory' },
-  employee: {
-    lead: '/employee/records/leads', quotation: '/employee/records/quotations', quotationRequest: '/employee/records/quotationRequests',
-    productRequest: '/employee/records/productRequests', poRequest: '/employee/records/poRequests', inventory: '/employee/records/inventory',
->>>>>>> 0c50e2c49fa764a2f4fb45b8841ce2c2a15285f9
   },
 };
 
