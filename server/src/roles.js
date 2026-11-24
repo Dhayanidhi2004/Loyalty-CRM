@@ -1,6 +1,6 @@
 // Login roles chosen on the Registration Page, and what each one can do.
 //
-// Access levels per module:
+// Access levels per module (emailLeads is available to every role):
 //   own    -> create, and see/edit only their own records (for leads: also leads assigned to them)
 //   all    -> create, and see/edit everyone's records (team lead view)
 //   full   -> like `all`, and may also delete (Sales Head on the sales pipeline)
@@ -14,34 +14,36 @@
 const ROLES = {
   'Sales Head': {
     leads: 'full', customers: 'all', quotationRequests: 'all', quotations: 'full', poRequests: 'full',
-    pi: 'full', salesOrders: 'all', workVisits: 'all', inventory: 'read',
+    pi: 'full', salesOrders: 'all', workVisits: 'all', inventory: 'read', emailLeads: 'own',
   },
   Engineer: {
-    workVisits: 'own', serviceDetails: 'own', productRequests: 'own', inventory: 'read',
+    workVisits: 'own', serviceDetails: 'own', productRequests: 'own', inventory: 'read', emailLeads: 'own',
   },
   // Own dashboard (/ServiceProject/Dashboard): "Service Project Data" lists every enquiry whose
   // Enquiry Type is Service (read only), plus their work visits, service details and inventory.
   'Service Engineer': {
-    leads: 'service', workVisits: 'own', serviceDetails: 'own', productRequests: 'own', inventory: 'read',
+    leads: 'service', workVisits: 'own', serviceDetails: 'own', productRequests: 'own', inventory: 'read', emailLeads: 'own',
   },
   'Sales Employee': {
     leads: 'own', customers: 'own', quotationRequests: 'own', quotations: 'own', poRequests: 'own',
-    pi: 'own', salesOrders: 'own', workVisits: 'own', inventory: 'read',
+    pi: 'own', salesOrders: 'own', workVisits: 'own', inventory: 'read', emailLeads: 'own',
   },
   // Same Analytics Dashboard as the sales team; manages stock, POs and PIs, views customers and quotations.
   'Inventory Manager': {
     leads: 'own', customers: 'read', quotations: 'read', poRequests: 'all', pi: 'all',
-    inventory: 'manage', productRequests: 'all',
+    inventory: 'manage', productRequests: 'all', emailLeads: 'own',
   },
   // Own dashboard: enters enquiries for a Sales Head, and pulls leads out of a Gmail inbox.
   // emailLeads is a feature, not a module: the Email Lead Intelligence page (routes/gmail.js).
+  // Every login has it ('own' = connects and sees their own Gmail inbox); creating an enquiry from an email
+  // additionally needs lead-create access.
   'Lead Filler': {
     leads: 'own', emailLeads: 'own',
   },
   // Same Analytics Dashboard as the Sales Employee (8 buttons, "Closed" card): keeps stock up to date,
   // raises POs and PIs, works leads assigned to them, views customers and quotations.
   'Stock Filler': {
-    leads: 'own', customers: 'read', quotations: 'read', poRequests: 'own', pi: 'own', inventory: 'manage',
+    leads: 'own', customers: 'read', quotations: 'read', poRequests: 'own', pi: 'own', inventory: 'manage', emailLeads: 'own',
   },
 };
 

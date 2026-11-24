@@ -12,7 +12,7 @@ import { homeFor } from './Login';
 // Picks the screen for a module, matching the original CRM:
 //   leads (admin)      -> Lead Enquiry (date filter + Fetch Enquiries)
 //   ?today=...         -> Today's Converted / Not Converted
-//   customers          -> Completed Enquiries
+//   customers          -> All Customers
 //   poRequests         -> Purchase Order Management cards
 //   pi                 -> Invoice Management (list -> detail)
 //   quotations         -> Quotation Management cards -> View More

@@ -27,6 +27,7 @@ const ACTIONS = [
   { label: 'Proforma Invoice', icon: FileText, tone: 'amber', path: '/SaleteamDasboard/invoices', needs: 'pi' },
   { label: 'View Quotation', icon: FileText, tone: 'violet', path: '/SaleteamDasboard/quotations', needs: 'quotations' },
   { label: 'Product Requests', icon: Boxes, tone: 'red', path: '/SaleteamDasboard/productRequests', needs: 'productRequests' },
+  { label: 'Email Leads', icon: Mail, tone: 'red', path: '/emailLeads', needs: 'emailLeads' },
 ];
 
 function StatCard({ label, value, note, icon: Icon, tone }) {

@@ -4,6 +4,7 @@ import { api, fileUrl } from '../api';
 import { useApp } from '../AppContext';
 import { StatusBadge, Loading } from './Bits';
 import { RecordFormModal, RecordViewModal } from './RecordModals';
+import InventoryAddBar from './InventoryAdd';
 import { fmtValue, fmtDate, downloadCsv, csvColumns } from '../format';
 import { canCreate, canDelete, canEditRecord, canSeeAll, levelOf } from '../access';
 
@@ -104,7 +105,8 @@ export default function RecordsPanel({ moduleKey, today, createdBy, startAdding 
         <button className="btn btn-soft" onClick={exportCsv} disabled={!items?.length}>
           <Download size={16} /> Export
         </button>
-        {canWrite && (
+        {canWrite && moduleKey === 'inventory' && <InventoryAddBar onDone={load} />}
+        {canWrite && moduleKey !== 'inventory' && (
           <button className="btn btn-green" onClick={() => setEditing({})}>
             <Plus size={17} /> Add {mod.singular}
           </button>

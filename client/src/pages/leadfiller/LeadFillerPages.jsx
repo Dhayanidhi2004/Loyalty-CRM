@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
-  Building2, ClipboardList, FileText, Inbox, Info, Mail, MapPin, Phone, PlusCircle, Search, Send, Users,
+  Building2, ClipboardList, FileText, Inbox, Info, Mail, MapPin, MessageSquare, Phone, PlusCircle, Reply, Search, Send, Users,
 } from 'lucide-react';
 import SalesShell, { LeadDetailModal, PRIORITY_TONE } from '../../components/SalesShell';
 import { LeadCard } from '../sales/SalesDashboard';
 import { Field } from '../../components/RecordModals';
+import EmailConversation from '../../components/EmailConversation';
 import { Loading } from '../../components/Bits';
 import { api } from '../../api';
 import { useApp } from '../../AppContext';
-import { CONVERTED, NOT_CONVERTED, canDelete, levelOf } from '../../access';
+import { CONVERTED, NOT_CONVERTED, canCreate, canDelete, levelOf } from '../../access';
 import { fmtDate } from '../../format';
 
 export const LF = {
@@ -18,6 +19,16 @@ export const LF = {
   enter: '/leadfiller/enterEnquiry',
   list: '/leadfiller/leadEnquiries',
   email: '/leadfiller/emailLeads',
+};
+// the same Email Leads / enquiry form screens inside the admin login
+export const ADMIN_EMAIL = { email: '/admin/emailLeads', enter: '/admin/enterEnquiry', list: '/admin/records/leads' };
+// Email Leads + enquiry form for the other logins; "list" is where each one views its enquiries
+const SHARED_EMAIL = { email: '/emailLeads', enter: '/emailLeads/enquiry' };
+const LIST_FOR = { sales: '/SaleteamDasboard/Dasboard', service: '/ServiceProject/Dashboard', employee: '/employee/records/leads' };
+const pathsFor = (user) => {
+  if (user?.role === 'admin') return ADMIN_EMAIL;
+  if (user?.dashboard === 'leads') return LF;
+  return { ...SHARED_EMAIL, list: LIST_FOR[user?.dashboard] || LIST_FOR.employee };
 };
 
 const CLOSED = [CONVERTED, NOT_CONVERTED];
@@ -110,7 +121,7 @@ export function LeadFillerDashboard() {
             </div>
             {shown < filtered.length && (
               <div style={{ textAlign: 'center', marginTop: 30 }}>
-                <button className="show-more" onClick={() => setShown((n) => n + 12)}>Show more ({filtered.length - shown} more)</button>
+                 <button className="show-more" onClick={() => setShown((n) => n + 12)}>Show more ({filtered.length - shown} more)</button>
               </div>
             )}
           </>
@@ -132,7 +143,8 @@ const SECTIONS = [
 const blankEnquiry = (fields) => Object.fromEntries(fields.map((f) => [f.key, '']));
 
 export function EnterEnquiryPage() {
-  const { modules, notify } = useApp();
+  const { modules, notify, user } = useApp();
+  const P = pathsFor(user);
   const navigate = useNavigate();
   const location = useLocation();
   // Coming from Email Leads: { prefill: {...}, emailLeadId, subject }
@@ -157,7 +169,7 @@ export function EnterEnquiryPage() {
       const body = { ...values, ...(fromEmail ? { emailLeadId: String(fromEmail.emailLeadId) } : {}) };
       const saved = await api('/records/leads', { method: 'POST', body });
       notify(`Enquiry ${saved.enqNo} submitted`);
-      if (fromEmail) return navigate(LF.email, { replace: true, state: { converted: saved.enqNo } });
+      if (fromEmail) return navigate(P.email, { replace: true, state: { converted: saved.enqNo } });
       setDone(saved);
       setValues({ ...blankEnquiry(fields), country: 'India' });
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -182,7 +194,7 @@ export function EnterEnquiryPage() {
           {done && (
             <div className="enq-ok">
               Enquiry <b>{done.enqNo}</b> submitted{done.salesHeadName ? ` to ${done.salesHeadName}` : ''}.
-              <button type="button" onClick={() => navigate(LF.list)}>View Lead Enquiries</button>
+              <button type="button" onClick={() => navigate(P.list)}>View Lead Enquiries</button>
             </div>
           )}
           {error && <div className="form-error">{error}</div>}
@@ -303,10 +315,22 @@ const CONNECT_RESULT = {
   expired: ['The Gmail sign-in took too long. Please try again.', 'error'],
   failed: ['Could not connect Gmail. Check the Google settings in server/.env (see README).', 'error'],
 };
+// Google's error codes, in plain words
+const REASON_HINT = {
+  redirect_uri_mismatch: 'Add the redirect address shown on this page under Authorized redirect URIs of the OAuth client in Google Cloud.',
+  invalid_client: 'The Client ID / secret in server/.env do not match an OAuth client in Google Cloud. Copy both again.',
+  unauthorized_client: 'The Client ID / secret in server/.env do not match an OAuth client in Google Cloud. Copy both again.',
+  invalid_grant: 'The sign-in expired or was used twice. Click Connect Gmail again.',
+  access_denied: 'Access was not allowed. If the app is in Testing, add this Gmail address under OAuth consent screen > Test users.',
+};
 const when = (v) => (v ? new Date(v).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—');
 
-export function EmailLeadsPage() {
-  const { notify } = useApp();
+export function EmailLeadsPage({ admin = false }) {
+  const { notify, user } = useApp();
+  const P = pathsFor(user);
+  const mayEnquire = canCreate(levelOf(user, 'leads')); // turning an email into an enquiry needs lead-create access
+  const scope = admin ? '?scope=all' : '';
+  const [inbox, setInbox] = useState(''); // admin: show one inbox only
   const navigate = useNavigate();
   const location = useLocation();
   const [status, setStatus] = useState(null);
@@ -314,9 +338,11 @@ export function EmailLeadsPage() {
   const [tab, setTab] = useState('new');
   const [busy, setBusy] = useState('');
   const [expanded, setExpanded] = useState(null);
+  const [talking, setTalking] = useState(null); // email lead whose conversation / reply box is open
+  const [skipped, setSkipped] = useState(null); // emails the last scan did not pick up, and why
 
-  const loadStatus = useCallback(() => api('/gmail/status').then(setStatus).catch((e) => notify(e.message, 'error')), [notify]);
-  const loadItems = useCallback(() => api('/gmail/leads').then(setItems).catch((e) => { notify(e.message, 'error'); setItems([]); }), [notify]);
+  const loadStatus = useCallback(() => api(`/gmail/status${scope}`).then(setStatus).catch((e) => notify(e.message, 'error')), [notify, scope]);
+  const loadItems = useCallback(() => api(`/gmail/leads${scope}`).then(setItems).catch((e) => { notify(e.message, 'error'); setItems([]); }), [notify, scope]);
 
   useEffect(() => {
     loadStatus();
@@ -325,15 +351,18 @@ export function EmailLeadsPage() {
 
   // back from Google (?gmail=connected) or from the enquiry form (state.converted)
   useEffect(() => {
-    const result = new URLSearchParams(location.search).get('gmail');
+    const q = new URLSearchParams(location.search);
+    const result = q.get('gmail');
     if (result && CONNECT_RESULT[result]) {
-      notify(...CONNECT_RESULT[result]);
-      navigate(LF.email, { replace: true });
+      const reason = q.get('reason');
+      const hint = REASON_HINT[reason] || (reason ? `Google said: ${reason}` : '');
+      notify(hint && result !== 'connected' ? `${CONNECT_RESULT[result][0]}. ${hint}` : CONNECT_RESULT[result][0], CONNECT_RESULT[result][1]);
+      navigate(P.email, { replace: true });
     } else if (location.state?.converted) {
       setTab('converted');
-      navigate(LF.email, { replace: true, state: null });
+      navigate(P.email, { replace: true, state: null });
     }
-  }, [location.search, location.state, navigate, notify]);
+  }, [location.search, location.state, navigate, notify, P.email]);
 
   async function connect() {
     setBusy('connect');
@@ -360,14 +389,28 @@ export function EmailLeadsPage() {
   async function scan() {
     setBusy('scan');
     try {
-      const r = await api('/gmail/scan', { method: 'POST', body: { days: 30 } });
+      const r = admin && status?.inboxes?.length
+        ? await api('/gmail/scan-all', { method: 'POST', body: { days: 30 } })
+        : await api('/gmail/scan', { method: 'POST', body: { days: 30 } });
       notify(r.message, 'success');
-      setTab('new');
+      setSkipped(r.skipped || []);
+      setTab(r.registered || r.replies ? 'converted' : 'new');
       await Promise.all([loadItems(), loadStatus()]);
     } catch (e) {
       notify(e.message, 'error');
     } finally {
       setBusy('');
+    }
+  }
+
+  async function importSkipped(x) {
+    try {
+      const r = await api('/gmail/import', { method: 'POST', body: { messageId: x.messageId, userId: x.userId } });
+      notify(r.message, 'success');
+      setSkipped((l) => l.filter((y) => y.messageId !== x.messageId));
+      await Promise.all([loadItems(), loadStatus()]);
+    } catch (e) {
+      notify(e.message, 'error');
     }
   }
 
@@ -383,7 +426,7 @@ export function EmailLeadsPage() {
 
   function toEnquiry(item) {
     const domainCompany = item.company || '';
-    navigate(LF.enter, {
+    navigate(P.enter, {
       state: {
         emailLeadId: item.id,
         subject: item.subject,
@@ -404,42 +447,74 @@ export function EmailLeadsPage() {
     });
   }
 
-  const shown = (items || []).filter((x) => x.status === tab);
+  const inScope = (items || []).filter((x) => !inbox || x.inbox === inbox);
+  const shown = inScope.filter((x) => x.status === tab);
+  const tabCount = (k) => (admin ? inScope.filter((x) => x.status === k).length : status?.counts?.[k] ?? 0);
   const authenticated = status?.connected;
 
   return (
-    <SalesShell subtitle="Email Leads">
+    <SalesShell subtitle={admin ? 'Email Leads (all inboxes)' : 'Email Leads'}>
       <section className="el-card">
         <header className="el-head">
           <div>
             <h2>Email Lead Intelligence Dashboard</h2>
-            <p>Scan Gmail inbox and extract potential business leads</p>
+            <p>{admin
+              ? 'Enquiries found in every connected Gmail inbox. New ones are registered as Lead Enquiries automatically.'
+              : 'Scan Gmail inbox and extract potential business leads'}</p>
           </div>
         </header>
         <div className="el-status">
           {!status ? <span className="muted">Checking Gmail…</span> : (
             <div className="el-lines">
               <p>
-                <b>Status:</b>{' '}
+                <b>{admin ? 'Your Gmail:' : 'Status:'}</b>{' '}
                 {authenticated
                   ? <span className="ok">Authenticated ({status.email})</span>
-                  : <span className="no">Not connected</span>}
+                  : <span className="no">Not connected{admin && status.inboxes?.length ? ' (the inboxes below are still read)' : ''}</span>}
                 {authenticated && <button className="el-link" onClick={disconnect}>Disconnect</button>}
               </p>
               <p><b>Salesheads:</b> {status.salesHeads} available</p>
               {status.lastScanAt && <p className="muted">Last scan: {when(status.lastScanAt)}</p>}
+              {authenticated && !status.canSend && (
+                <p className="el-warn">Replies from the CRM need permission to send email: click <b>Connect Gmail</b> again and allow “Send email on your behalf”.</p>
+              )}
+              {status.configured && status.syncMinutes > 0 && (
+                <p className="muted">
+                  Connected inboxes are checked every {status.syncMinutes} min{status.autoRegister ? '; each new enquiry is added to Lead Enquiries with a draft quotation, and the team is notified' : ''}.
+                </p>
+              )}
+              {admin && status.inboxes && (
+                <p><b>Connected inboxes:</b>{' '}
+                  {status.inboxes.length === 0 ? <span className="muted">none yet</span> : status.inboxes.map((b) => (
+                    <span key={b.userId} className="el-inbox">{b.email} <i>({b.name} · {b.role}{b.lastScanAt ? ` · checked ${when(b.lastScanAt)}` : ''})</i></span>
+                  ))}
+                </p>
+              )}
               {status.mock && <p className="muted">Demo mode (GMAIL_MOCK=1): scanning a sample inbox.</p>}
             </div>
           )}
           <div className="el-buttons">
             <button className="el-btn connect" onClick={connect} disabled={!status || busy !== ''}>
-              <Mail size={18} /> {busy === 'connect' ? 'Opening Google…' : 'Connect Gmail'}
+              <Mail size={18} /> {busy === 'connect' ? 'Opening Google…' : authenticated ? 'Change Gmail Account' : 'Connect Gmail'}
             </button>
-            <button className="el-btn scan" onClick={scan} disabled={!authenticated || busy !== ''}>
-              <Inbox size={18} /> {busy === 'scan' ? 'Scanning…' : 'Scan Inbox'}
+            <button className="el-btn scan" onClick={scan} disabled={!(authenticated || (admin && status?.inboxes?.length)) || busy !== ''}>
+              <Inbox size={18} /> {busy === 'scan' ? 'Scanning…' : admin && status?.inboxes?.length ? 'Scan All Inboxes' : 'Scan Inbox'}
             </button>
           </div>
         </div>
+        {status && status.configured && !status.setupProblem && (
+          <div className="el-hint">
+            Google will ask <b>which account</b> to use: pick the Gmail that receives your customers' enquiries. While the Google app is in
+            Testing, that Gmail must be added under <b>OAuth consent screen → Test users</b>.
+          </div>
+        )}
+        {status && status.configured && status.setupProblem && <div className="el-setup">{status.setupProblem}</div>}
+        {status && status.configured && !status.setupProblem && !status.connected && status.redirectUri && (
+          <div className="el-hint">
+            Google Cloud setup: this address must be listed under <b>Authorized redirect URIs</b> of the OAuth client:{' '}
+            <code>{status.redirectUri}</code>
+          </div>
+        )}
         {status && !status.configured && (
           <div className="el-setup">
             Gmail isn't set up on the server yet. Add <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code> to
@@ -448,17 +523,45 @@ export function EmailLeadsPage() {
         )}
       </section>
 
+      {skipped && skipped.length > 0 && (
+        <section className="el-skipped">
+          <header>
+            <b>Not picked up in the last scan ({skipped.length})</b>
+            <span>These emails did not look like enquiries. If one is, click <b>Add as lead</b>.</span>
+            <button className="el-link" onClick={() => setSkipped(null)}>Hide</button>
+          </header>
+          <ul>
+            {skipped.map((x) => (
+              <li key={x.messageId}>
+                <div>
+                  <b>{x.subject || '(no subject)'}</b>
+                  <small>{x.from}{x.inbox ? ` · inbox ${x.inbox}` : ''} · {when(x.receivedAt)}</small>
+                  <em>{x.reason}</em>
+                </div>
+                {!/same Gmail account/.test(x.reason) && <button className="el-small ghost" onClick={() => importSkipped(x)}>Add as lead</button>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="recent-tabs el-tabs">
         {EMAIL_TABS.map(([k, label]) => (
           <button key={k} className={`rt ${k === 'new' ? 'all' : k === 'converted' ? 'closed' : 'quoted'}${tab === k ? ' on' : ''}`} onClick={() => setTab(k)}>
-            {label} ({status?.counts?.[k] ?? 0})
+            {label} ({tabCount(k)})
           </button>
         ))}
+        {admin && status?.inboxes?.length > 1 && (
+          <select className="sel el-inbox-pick" value={inbox} onChange={(e) => setInbox(e.target.value)} aria-label="Inbox">
+            <option value="">All inboxes</option>
+            {status.inboxes.map((b) => <option key={b.userId} value={b.email}>{b.email} ({b.name})</option>)}
+          </select>
+        )}
       </div>
 
       {items === null ? <Loading text="Loading leads…" /> : shown.length === 0 ? (
         <div className="el-empty">
-          {tab === 'new' ? 'No leads found. Click Scan Inbox to begin.' : tab === 'converted' ? 'No emails turned into enquiries yet.' : 'No ignored emails.'}
+          {tab === 'new' ? (status?.autoRegister ? 'No unhandled emails. New enquiries are registered automatically (see Converted); click Scan Inbox to check now.' : 'No leads found. Click Scan Inbox to begin.') : tab === 'converted' ? 'No emails turned into enquiries yet.' : 'No ignored emails.'}
         </div>
       ) : (
         <div className="el-list">
@@ -468,6 +571,7 @@ export function EmailLeadsPage() {
                 <div style={{ minWidth: 0 }}>
                   <h3>{x.subject}</h3>
                   <p className="from">{x.fromName ? `${x.fromName} · ` : ''}{x.fromEmail} · {when(x.receivedAt)}</p>
+                  {admin && x.inbox && <p className="from">Inbox: {x.inbox}{x.inboxOwner ? ` (${x.inboxOwner})` : ''}</p>}
                 </div>
                 <div className="el-tags">
                   <span className="score" title="How strongly this email looks like an enquiry">Score {x.score}</span>
@@ -484,20 +588,23 @@ export function EmailLeadsPage() {
               {x.reasons?.length > 0 && <div className="el-reasons">{x.reasons.map((r) => <span key={r}>{r}</span>)}</div>}
               <footer>
                 <button className="el-link" onClick={() => setExpanded(expanded === x.id ? null : x.id)}>{expanded === x.id ? 'Show less' : 'Read email'}</button>
+                {x.replies > 0 && <span className="el-replied"><MessageSquare size={14} /> {x.replies} repl{x.replies === 1 ? 'y' : 'ies'} sent{x.lastReplyAt ? ` · last ${when(x.lastReplyAt)}` : ''}</span>}
                 <span style={{ flex: 1 }} />
+                {x.status !== 'ignored' && <button className="el-small reply" onClick={() => setTalking(x)}><Reply size={16} /> Reply</button>}
                 {x.status === 'new' && (
                   <>
                     <button className="el-small ghost" onClick={() => setLeadStatus(x, 'ignored')}>Ignore</button>
-                    <button className="el-small go" onClick={() => toEnquiry(x)}><FileText size={16} /> Create Enquiry</button>
+                    {mayEnquire && <button className="el-small go" onClick={() => toEnquiry(x)}><FileText size={16} /> Create Enquiry</button>}
                   </>
                 )}
                 {x.status === 'ignored' && <button className="el-small ghost" onClick={() => setLeadStatus(x, 'new')}>Restore</button>}
-                {x.status === 'converted' && <span className="el-done">Enquiry {x.leadEnqNo || 'created'}</span>}
+                {x.status === 'converted' && <span className="el-done">Enquiry {x.leadEnqNo || 'created'}{x.auto ? ' · registered automatically' : ''}</span>}
               </footer>
             </article>
           ))}
         </div>
       )}
+      {talking && <EmailConversation emailLeadId={talking.id} onClose={() => setTalking(null)} onSent={loadItems} />}
     </SalesShell>
   );
 }

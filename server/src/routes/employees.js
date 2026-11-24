@@ -222,12 +222,16 @@ router.post('/reset-email', ah(async (req, res) => {
 // Quick action: Reset Employee Password  { empCode | id | name | email, newPassword }
 router.post('/reset-password', ah(async (req, res) => {
   const b = req.body || {};
+  // the Reset Password quick action identifies the employee by email
+  const byMail = b.email !== undefined && !b.id && b.empCode === undefined && !String(b.name || '').trim();
+  const email = byMail ? String(b.email ?? '').trim() : '';
+  if (byMail && !EMAIL_RE.test(email)) return res.status(400).json({ message: 'Enter a valid employee email' });
   const { user, error, status } = await findTarget(b);
   if (error) return res.status(status || 400).json({ message: error });
-  if (!user) return res.status(404).json({ message: 'No employee found with that name' });
+  if (!user) return res.status(404).json({ message: byMail ? `No employee found with the email ${email}` : 'No employee found with that name' });
   if (String(b.newPassword || '').length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
   await query('update crm_users set password_hash = $1 where id = $2', [await bcrypt.hash(b.newPassword, 10), user.id]);
-  res.json({ message: `Password reset for ${user.name}${user.emp_code ? ` (${user.emp_code})` : ''}` });
+  res.json({ message: `Password reset for ${user.name}${byMail ? ` (${user.email})` : user.emp_code ? ` (${user.emp_code})` : ''}` });
 }));
 
 module.exports = router;

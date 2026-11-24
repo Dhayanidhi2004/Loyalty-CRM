@@ -6,7 +6,6 @@ export const BRAND = {
   logoInitials: 'LA',
   tagline: 'We Make It, So You Succeed',
   logoUrl: '/logo.png',
-  appTitle: 'Enterprise CRM',
   // Printed on the Proforma Invoice form and its PDF
   legalName: 'LOYALTY AUTOMATION PVT.LTD.',
   address: 'No. 27/1,Vaigai Colony 2nd Street, 12th Avenue Ashok Nagar,Ch-83.',
@@ -47,10 +46,11 @@ export const TONES = {
 // Same order and colours as the original admin dashboard.
 export const ADMIN_ACTIONS = [
   { label: 'Add Employee', tone: 'indigo', path: '/admin/register' },
-  { label: 'Reset Employee Password', tone: 'purple', path: '/admin/resetPassword' }, // by Employee ID
+  { label: 'Reset Employee Password', tone: 'purple', path: '/admin/resetPassword' }, // by employee email
   { label: "Today's Converted Customers", tone: 'green', to: 'leads?today=converted' },
   { label: "Today's Not Converted", tone: 'red', to: 'leads?today=notConverted' },
   { label: 'All Lead Enquiries', tone: 'cyan', to: 'leads' },
+  { label: 'Email Leads', tone: 'red', path: '/admin/emailLeads', count: 'emailLeads' }, // Gmail enquiries, all inboxes
   { label: 'All Customers', tone: 'sky', to: 'customers' },
   { label: 'All Quotation Requests', tone: 'violet', to: 'quotationRequests' },
   { label: 'All PO Requests', tone: 'emerald', to: 'poRequests' },
@@ -90,6 +90,7 @@ export function employeeActions(access) {
     const prefix = lvl === 'own' ? 'My ' : lvl === 'read' ? '' : 'All ';
     actions.push({ label: `${prefix}${label}`, tone: TONE_CYCLE[i % TONE_CYCLE.length], to: k });
   });
+  if (access.emailLeads) actions.push({ label: 'Email Leads', tone: 'rose', path: '/emailLeads' });
   actions.push({ label: 'My Company Resources', tone: 'lavender', path: '/employee/companyResources' });
   return actions;
 }

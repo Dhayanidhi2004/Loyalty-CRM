@@ -23,7 +23,9 @@ const google = () => ({
   redirect: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5173/api/gmail/callback',
 });
 const configured = () => MOCK || !!(google().id && google().secret);
-const PAGE = '/leadfiller/emailLeads';
+const PAGE = '/leadfiller/emailLeads'; // fallback (open to every login)
+// Where each login sees its Email Leads page (client/src/App.jsx)
+const pageFor = (user) => (user?.role === 'admin' ? '/admin/emailLeads' : user?.designation === 'Lead Filler' ? '/leadfiller/emailLeads' : '/emailLeads');
 
 const fail = (status, message) => Object.assign(new Error(message), { status });
 
@@ -94,13 +96,15 @@ async function accessToken(userId) {
 
 // ---------- OAuth callback (Google redirects the browser here, so no Bearer token) ----------
 router.get('/callback', ah(async (req, res) => {
-  const back = (result) => res.redirect(`${new URL(google().redirect).origin}${PAGE}?gmail=${result}`);
+  let page = PAGE;
+  const back = (result) => res.redirect(`${new URL(google().redirect).origin}${page}?gmail=${result}`);
   if (req.query.error) return back('denied');
   let userId;
   try {
     const st = jwt.verify(String(req.query.state || ''), SECRET);
     if (st.purpose !== 'gmail') throw new Error('bad state');
     userId = st.id;
+    page = pageFor(await one('select role, designation from crm_users where id = $1', [userId]));
   } catch {
     return back('expired');
   }
@@ -173,7 +177,7 @@ router.get('/auth-url', ah(async (req, res) => {
        on conflict (user_id) do update set email = excluded.email, updated_at = now()`,
       [req.user.id, MOCK_EMAIL]
     );
-    return res.json({ url: `${PAGE}?gmail=connected` });
+    return res.json({ url: `${pageFor(req.user)}?gmail=connected` });
   }
   if (!configured()) throw fail(400, 'Gmail is not set up on the server yet: add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to server/.env (see README).');
   const state = jwt.sign({ id: req.user.id, purpose: 'gmail' }, SECRET, { expiresIn: '10m' });

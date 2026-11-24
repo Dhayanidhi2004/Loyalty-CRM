@@ -102,3 +102,26 @@ create index if not exists crm_email_leads_user_idx on crm_email_leads (user_id,
 
 alter table crm_gmail       enable row level security;
 alter table crm_email_leads enable row level security;
+
+-- In-app notifications (the bell in the header): one row per person per event.
+create table if not exists crm_notifications (
+  id         bigserial primary key,
+  user_id    bigint not null references crm_users(id) on delete cascade,
+  kind       text not null,
+  title      text not null,
+  body       text,
+  ref        text,
+  read_at    timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists crm_notifications_user_idx on crm_notifications (user_id, read_at, created_at desc);
+alter table crm_notifications enable row level security;
+
+-- Project Quotations page: one row per quotation, the whole document kept as JSON.
+create table if not exists crm_project_quotations (
+  id         bigserial primary key,
+  data       jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+alter table crm_project_quotations enable row level security;

@@ -19,6 +19,7 @@ const BUTTONS = [
   ['Inventory', SERVICE.inventory],
   ['Get Service Details', SERVICE.serviceDetails],
   ['Workvisits', SERVICE.workVisits],
+  ['Email Leads', '/emailLeads'],
 ];
 
 // "Service Project Data": every enquiry whose Enquiry Type is Service (columns as on the original screen).
