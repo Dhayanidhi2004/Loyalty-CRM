@@ -489,7 +489,7 @@ textarea.cd-input { height: auto; min-height: 90px; padding: 12px 16px; resize: 
 .pf-brand p { margin: 0 0 8px; color: #1d4ed8; font-weight: 700; font-size: 17px; }
 .pf-logo { width: 120px; height: auto; }
 .pf-logo-badge { width: 112px; height: 80px; border-radius: 50%; border: 6px solid #4338ca; border-right-color: #dc2626; display: grid; place-items: center; color: #dc2626; font-weight: 800; font-size: 34px; flex-shrink: 0; }
-.pf-gst { color: #dc2626; font-weight: 700; font-size: 18px; margin: 4px 0 0 110px; }
+.pf-gst { color: #dc2626; font-weight: 700; font-size: 18px; margin: 4px 0 0; text-align: center; }
 .pf-title { text-align: center; color: #dc2626; font-size: 32px; font-weight: 700; margin: 12px 0 16px; }
 .pf-meta { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 16px; align-items: center; border-top: 1px solid #9ca3af; padding: 10px 0; font-size: 17px; }
 .pf-meta.po { grid-template-columns: 2fr 1fr 1fr; border-top: 1px dashed #d1d5db; border-bottom: 1px solid #9ca3af; margin-bottom: 10px; }
@@ -667,3 +667,18 @@ a.pi-btn { text-decoration: none; display: inline-flex; align-items: center; }
 .el-skipped li div { display: flex; flex-direction: column; min-width: 0; }
 .el-skipped li small { color: #6b7280; font-size: 12.5px; overflow-wrap: anywhere; }
 .el-skipped li em { color: #92400e; font-size: 12.5px; font-style: normal; }
+
+/* ---- Quotation / PO / PI PDF: whole sheet fits the page, no scroll bar, nothing cut off ---- */
+.pf-print .pq-sheet, .pf-print .pf-items-wrap { overflow: visible; }
+.pf-print .pq-sheet .pf-doc { min-width: 0; }
+.pf-print .pf-items { min-width: 0; table-layout: auto; }
+.pf-print .pf-meta label { white-space: normal; flex-wrap: wrap; }
+.pf-print ::-webkit-scrollbar { display: none; }
+@media print {
+  .pq-sheet, .pf-items-wrap { overflow: visible !important; }
+  .pq-sheet .pf-doc { min-width: 0 !important; }
+  .pf-items { min-width: 0; }
+  .pf-meta label { white-space: normal; flex-wrap: wrap; }
+  .pf-meta { grid-template-columns: 1fr 1fr 1fr 1.7fr; gap: 10px; font-size: 14px; }
+  .pf-gst { text-align: center; }
+}

@@ -73,7 +73,6 @@ function PoSheet({ po }) {
           <p>1. Payment Terms: {po.paymentTerms || '—'}</p>
           <p>2. Warranty Terms: {po.warrantyTerms || '—'}</p>
           <p>3. Delivery Terms: {po.deliveryTerms || '—'}</p>
-          {po.lp && <p><b>LP:</b> {po.lp}</p>}
         </div>
         <div className="pf-sum">
           <div><span>Total Amount:</span><span>{inr(po.totalAmount)}</span></div>
@@ -123,9 +122,9 @@ function QuotationSheet({ q }) {
           <p>4. Delivery: {q.delivery || '—'}</p>
         </div>
         <div className="pf-sum">
-          <div><span>Items Total:</span><span>{inr(q.itemsTotal)}</span></div>
+          {/* any LP amount is part of the figure shown here, so the totals still add up without printing LP */}
+          <div><span>Items Total:</span><span>{inr(num(q.itemsTotal) + num(q.lpAmount))}</span></div>
           {num(q.freight) > 0 && <div><span>Freight:</span><span>{inr(q.freight)}</span></div>}
-          {num(q.lpAmount) > 0 && <div><span>LP Amount:</span><span>{inr(q.lpAmount)}</span></div>}
           <div><span>GST Amount ( {num(q.gst)} %):</span><span>{inr(q.gstAmount)}</span></div>
           <div className="grand"><span>TOTAL:</span><span>{inr(q.totalPayable)}</span></div>
           <div className="words"><b>Amount In Words:</b><b>{amountInWords(q.totalPayable)}</b></div>

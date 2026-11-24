@@ -311,7 +311,6 @@ export function PiSheet({ pi }) {
           <p>2. Interest @ {pi.interestRate ?? 24}% p.a. will be charged if the payment is not made in the stipulated time.</p>
           <p>3. Subject to {pi.jurisdiction || BRAND.jurisdiction} Jurisdiction only.</p>
           <p>4. Certified that the particulars given above are {pi.certification === 'No' ? 'Not verified' : 'True'}.</p>
-          {num(pi.lpAmount) > 0 && <p><b>LP:</b> {inr(pi.lpAmount)}</p>}
         </div>
         <div className="pf-sum">
           <div><span>Sub Total:</span><span>{inr(pi.itemsTotal, 0)}</span></div>
