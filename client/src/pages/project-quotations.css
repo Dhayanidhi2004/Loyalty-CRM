@@ -29,3 +29,8 @@
 .pq-pdf-btn { gap: 6px; background: #fee2e2 !important; color: #b91c1c !important; }
 .pf-items tr.pq-bom td.sno { white-space: nowrap; width: auto; }
 @media print { .pf-items tr { break-inside: avoid; } }
+
+/* Always-visible Save bar while a quotation is being edited (the top bar scrolls away on a long sheet) */
+.pq-savebar { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 50; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: center; background: #fff; border: 1px solid #c7d2fe; border-radius: 14px; padding: 10px 18px; box-shadow: 0 6px 24px rgba(0,0,0,.18); max-width: calc(100vw - 24px); }
+.pq-savebar span { font-weight: 600; color: #4338ca; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media print { .pq-savebar { display: none; } }

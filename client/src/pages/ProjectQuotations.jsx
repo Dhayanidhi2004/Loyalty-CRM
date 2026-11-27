@@ -78,7 +78,7 @@ export function Sheet({ q, ed, hl, onRemove, onMove, onInsert, onCust, onNum }) 
     <div className="pq-sheet">
       <div className="pf-doc pf-sheet pq-pdf">
         <PiLetterhead title="QUOTATION" />
-        <div className="pf-meta two">
+        <div className="pf-meta rt">
           <label><b>Reference No:</b> <span>{E('ref', 'ref no')}</span></label>
           <label><b>Date:</b> <span>{E('date', 'dd-mm-yyyy')}</span></label>
         </div>
@@ -327,6 +327,14 @@ export default function ProjectQuotationsPage() {
               </div>
             )}
           </>
+        )}
+        {draft && (
+          <div className="pq-savebar no-print">
+            <span>Editing {draft.id === 'new' ? 'new quotation' : (draft.cust || 'quotation')}</span>
+            <button className="view-more" disabled={saving} onClick={save}>{saving ? 'Saving…' : 'Save quotation'}</button>
+            <button className="back-list" onClick={addRow}>+ Add item</button>
+            <button className="back-list" onClick={cancel}>Cancel</button>
+          </div>
         )}
       </div>
     );

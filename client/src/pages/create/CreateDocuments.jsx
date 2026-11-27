@@ -275,10 +275,6 @@ export function PiSheet({ pi }) {
       <div className="pf-meta">
         <label><b>PI No:</b> <span>{pi.piNumber}</span></label>
         <label><b>PI Date:</b> <span>{dmy(pi.piDate || pi.createdAt)}</span></label>
-        <label><b>Ref No:</b> <span>{pi.yourRef || ''}</span></label>
-        <label><b>Ref Date:</b> <span>{dmy(pi.refDate)}</span></label>
-      </div>
-      <div className="pf-meta po">
         <label><b>PO No:</b> <span>{pi.poNo || ''}</span></label>
         <label><b>PO Date:</b> <span>{dmy(pi.poDate)}</span></label>
       </div>

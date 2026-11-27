@@ -28,3 +28,13 @@ Changed: index.js (now only starts app.js), routes/records.js (customers bulk, i
 New test: qa/customer-upload-loop.test.js
 Not included: .env (it held live keys: rotate them), node_modules (run `npm install` in server/ and client/)
 Not rebuilt: Gmail auto-register / email replies / scan-all (needs live Google credentials)
+
+## PDF layout + project quotation save
+- PI PDF: Ref No / Ref Date removed; PO No and PO Date now sit on the same line as PI No and PI Date.
+- PO PDF: Ref Q No / Q Date removed.
+- Terms & Conditions box on every PDF (quotation, project quotation, PO, PI): light grey highlight, all text bold black.
+- Project Quotations: a floating "Save quotation" bar stays on screen while a quotation is being edited.
+
+## PDF header tweaks
+- PO PDF: PO Date and Financial Year moved to the right-hand corner of their rows; the white box around the company address removed.
+- Quotation PDFs (quotation and project quotation): Date moved to the right-hand corner of the header row.

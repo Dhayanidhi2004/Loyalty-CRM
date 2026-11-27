@@ -39,20 +39,18 @@ function PoSheet({ po }) {
   return (
     <div className="pf-doc pf-sheet">
       <PiLetterhead title={PDF_KINDS.po.title} />
-      <div className="pf-meta">
+      <div className="pf-meta rt">
         <label><b>PO No:</b> <span>{po.docNumber}</span></label>
         <label><b>PO Date:</b> <span>{dmy(po.createdAt)}</span></label>
-        <label><b>Ref Q No:</b> <span>{po.refQNo || ''}</span></label>
-        <label><b>Q Date:</b> <span>{dmy(po.qDate)}</span></label>
       </div>
-      <div className="pf-meta po">
+      <div className="pf-meta rt po">
         <label><b>Supplier No:</b> <span>{po.suppNo || ''}</span></label>
         <label><b>Financial Year:</b> <span>{po.financialYear || ''}</span></label>
       </div>
       <section className="pf-consignee">
         <div><div className="pf-cap">TO</div><div className="pf-name">{po.companyName}</div></div>
         <div className="pf-cons-right">
-          <div className="pf-addr">{po.address}</div>
+          <div className="pf-addr plain">{po.address}</div>
           <label><b>GSTIN:</b> <span>{po.gstin || ''}</span></label>
         </div>
       </section>
@@ -92,7 +90,7 @@ function QuotationSheet({ q }) {
   return (
     <div className="pf-doc pf-sheet">
       <PiLetterhead title={PDF_KINDS.quotation.title} />
-      <div className="pf-meta two">
+      <div className="pf-meta rt">
         <label><b>Reference No:</b> <span>{q.referenceNo}</span></label>
         <label><b>Date:</b> <span>{dmy(q.createdAt)}</span></label>
       </div>
