@@ -107,7 +107,7 @@ global.fetch = async (url, opts) => {
   await db.exec(fs.readFileSync(path.join(SERVER, 'supabase', 'schema.sql'), 'utf8'));
 
   const bcrypt = require(path.join(SERVER, 'node_modules', 'bcryptjs'));
-  const { signToken } = require(path.join(SERVER, 'src', 'auth.js'));
+  const { startSession } = require(path.join(SERVER, 'src', 'auth.js'));
   const people = [
     ['admin', 'Administrator', 'admin'], ['head', 'Sales Head', 'employee'], ['sales', 'Sales Employee', 'employee'],
     ['stock', 'Inventory Manager', 'employee'], ['filler', 'Lead Filler', 'employee'], ['svc', 'Service Engineer', 'employee'],
@@ -119,7 +119,7 @@ global.fetch = async (url, opts) => {
   for (const [k, designation, role] of people) {
     const r = await db.query('insert into crm_users (name, email, password_hash, role, designation) values ($1,$2,$3,$4,$5) returning id', [k, `${k}@qa.test`, hash, role, designation]);
     ID[k] = Number(r.rows[0].id);
-    T[k] = signToken({ id: ID[k], role });
+    T[k] = await startSession({ id: ID[k], role }, `qa-${k}`);
   }
 
   const app = require(path.join(SERVER, 'src', 'app.js'));

@@ -125,3 +125,8 @@ create table if not exists crm_project_quotations (
   updated_at timestamptz not null default now()
 );
 alter table crm_project_quotations enable row level security;
+
+-- One active login per account + 1-hour idle timeout (see src/auth.js)
+alter table crm_users add column if not exists active_session  text;
+alter table crm_users add column if not exists session_device  text;
+alter table crm_users add column if not exists session_seen    timestamptz;

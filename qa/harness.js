@@ -34,11 +34,11 @@ async function start(port) {
     ['admin', 'Admin', 'admin'], ['saleshead', 'Sales Head', 'employee'], ['salesemp', 'Sales Employee', 'employee'],
     ['inventory', 'Inventory Manager', 'employee'], ['leadfiller', 'Lead Filler', 'employee'],
   ];
-  const { signToken } = require(path.join(SERVER, 'src', 'auth.js'));
+  const { startSession } = require(path.join(SERVER, 'src', 'auth.js'));
   const tokens = {};
   for (const [key, designation, role] of roles) {
     const r = await db.query('insert into crm_users (name, email, password_hash, role, designation) values ($1,$2,$3,$4,$5) returning id', [key, `${key}@qa.test`, 'x', role, designation]);
-    tokens[key] = signToken({ id: Number(r.rows[0].id), role });
+    tokens[key] = await startSession({ id: Number(r.rows[0].id), role }, `qa-${key}`);
   }
 
   const express = require(path.join(SERVER, 'node_modules', 'express'));

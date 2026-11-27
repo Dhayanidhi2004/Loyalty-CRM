@@ -153,6 +153,7 @@ router.put('/:id', ah(async (req, res) => {
   if (b.password) {
     if (String(b.password).length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
     updates.password_hash = await bcrypt.hash(b.password, 10);
+    Object.assign(updates, { active_session: null, session_device: null, session_seen: null }); // new password = logged out everywhere
   }
   if (b.role && b.role !== user.role) {
     if (id === req.user.id) return res.status(400).json({ message: "You can't change your own access level" });
@@ -230,7 +231,7 @@ router.post('/reset-password', ah(async (req, res) => {
   if (error) return res.status(status || 400).json({ message: error });
   if (!user) return res.status(404).json({ message: byMail ? `No employee found with the email ${email}` : 'No employee found with that name' });
   if (String(b.newPassword || '').length < 6) return res.status(400).json({ message: 'Password must be at least 6 characters' });
-  await query('update crm_users set password_hash = $1 where id = $2', [await bcrypt.hash(b.newPassword, 10), user.id]);
+  await query('update crm_users set password_hash = $1, active_session = null, session_device = null, session_seen = null where id = $2', [await bcrypt.hash(b.newPassword, 10), user.id]);
   res.json({ message: `Password reset for ${user.name}${byMail ? ` (${user.email})` : user.emp_code ? ` (${user.emp_code})` : ''}` });
 }));
 

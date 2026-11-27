@@ -17,11 +17,11 @@ process.env.JWT_SECRET = 'qa-secret';
   Module._load = function (r, ...a) { return r === 'pg' ? { Pool, types: { setTypeParser() {} } } : orig.call(this, r, ...a); };
   await db.exec(fs.readFileSync(path.join(SERVER, 'supabase', 'schema.sql'), 'utf8'));
 
-  const { signToken } = require(path.join(SERVER, 'src', 'auth.js'));
+  const { startSession } = require(path.join(SERVER, 'src', 'auth.js'));
   const ids = {}; const tok = {};
   for (const [k, d, role] of [['admin', 'Admin', 'admin'], ['head', 'Sales Head', 'employee'], ['emp', 'Sales Employee', 'employee'], ['filler', 'Lead Filler', 'employee'], ['filler2', 'Lead Filler', 'employee']]) {
     const r = await db.query('insert into crm_users (name, email, password_hash, role, designation) values ($1,$2,$3,$4,$5) returning id', [k, `${k}@qa.test`, 'x', role, d]);
-    ids[k] = Number(r.rows[0].id); tok[k] = signToken({ id: ids[k], role });
+    ids[k] = Number(r.rows[0].id); tok[k] = await startSession({ id: ids[k], role }, `qa-${k}`);
   }
   const express = require(path.join(SERVER, 'node_modules', 'express'));
   const app = express(); app.use(express.json());

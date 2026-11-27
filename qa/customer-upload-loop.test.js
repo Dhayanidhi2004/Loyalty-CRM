@@ -16,11 +16,11 @@ const ok = (c, m, extra) => { checks++; if (!c && failures.length < 50) failures
   class Pool { query(t, p) { return run(t, p); } async connect() { return { query: (t, p) => run(t, p), release() {} }; } on() {} }
   const orig = Module._load; Module._load = function (r, ...x) { return r === 'pg' ? { Pool, types: { setTypeParser() {} } } : orig.call(this, r, ...x); };
   await db.exec(fs.readFileSync(path.join(SERVER, 'supabase/schema.sql'), 'utf8'));
-  const { signToken } = require(path.join(SERVER, 'src/auth.js'));
+  const { startSession } = require(path.join(SERVER, 'src/auth.js'));
   const tok = {};
   for (const [k, d, role] of [['admin', 'Admin', 'admin'], ['head', 'Sales Head', 'employee'], ['sales', 'Sales Employee', 'employee'], ['inv', 'Inventory Manager', 'employee']]) {
     const r = await db.query('insert into crm_users (name,email,password_hash,role,designation) values ($1,$2,$3,$4,$5) returning id', [k, `${k}@t.io`, 'x', role, d]);
-    tok[k] = signToken({ id: Number(r.rows[0].id), role });
+    tok[k] = await startSession({ id: Number(r.rows[0].id), role }, `qa-${k}`);
   }
   const app = require(path.join(SERVER, 'src/app.js'));
   const srv = await new Promise((o) => { const s = app.listen(0, '127.0.0.1', () => o(s)); });
