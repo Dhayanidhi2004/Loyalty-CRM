@@ -45,7 +45,7 @@ export default function NotificationBell() {
 
   const refreshCount = useCallback(() => {
     if (document.hidden) return;
-    api('/notifications/count').then((r) => setUnread(r.unread)).catch(() => {});
+    api('/notifications/count', { background: true }).then((r) => setUnread(r.unread)).catch(() => {});
   }, []);
   const loadList = useCallback(() => api('/notifications?limit=30').then((r) => { setItems(r.items); setUnread(r.unread); }).catch(() => setItems([])), []);
 

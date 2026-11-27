@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Lock, Mail, RefreshCw } from 'lucide-react';
 import Shell from '../components/Shell';
 import Modal from '../components/Modal';
 import { useApp } from '../AppContext';
-import { api } from '../api';
+import { api, LOGOUT_MSG } from '../api';
 
 import { homeFor } from '../access';
 
@@ -60,7 +60,8 @@ export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(() => sessionStorage.getItem(LOGOUT_MSG) || '');
+  useEffect(() => { sessionStorage.removeItem(LOGOUT_MSG); }, []);
   const [busy, setBusy] = useState(false);
   const [showReset, setShowReset] = useState(false);
 

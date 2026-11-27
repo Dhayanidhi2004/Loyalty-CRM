@@ -4,8 +4,23 @@ const BASE = import.meta.env.VITE_API_URL || '';
 export const getToken = () => localStorage.getItem('crm_token');
 export const setToken = (t) => (t ? localStorage.setItem('crm_token', t) : localStorage.removeItem('crm_token'));
 
-export async function api(path, { method = 'GET', body, form } = {}) {
+// Random id kept in this browser: lets the same browser log in again while its own session is still open.
+export function deviceId() {
+  let id = localStorage.getItem('crm_device');
+  if (!id) {
+    id = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}`);
+    localStorage.setItem('crm_device', id);
+  }
+  return id;
+}
+// Why the person was sent back to the login page (shown once there).
+export const LOGOUT_MSG = 'crm_logout_msg';
+
+// background: true = automatic polling, which must not count as the person being active.
+// quiet: true = don't redirect to the login page on 401 (used by logout itself).
+export async function api(path, { method = 'GET', body, form, background = false, quiet = false } = {}) {
   const headers = {};
+  if (background) headers['X-Background'] = '1';
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
@@ -29,8 +44,9 @@ export async function api(path, { method = 'GET', body, form } = {}) {
   } catch {
     /* empty body */
   }
-  if (res.status === 401 && token) {
+  if (res.status === 401 && token && !quiet && path !== '/auth/login') {
     setToken(null);
+    if (data?.message) sessionStorage.setItem(LOGOUT_MSG, data.message);
     if (!location.pathname.startsWith('/login')) location.href = '/login';
   }
   if (!res.ok) throw new Error(data?.message || `Request failed (${res.status})`);

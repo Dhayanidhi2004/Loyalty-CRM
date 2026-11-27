@@ -38,3 +38,16 @@ Not rebuilt: Gmail auto-register / email replies / scan-all (needs live Google c
 ## PDF header tweaks
 - PO PDF: PO Date and Financial Year moved to the right-hand corner of their rows; the white box around the company address removed.
 - Quotation PDFs (quotation and project quotation): Date moved to the right-hand corner of the header row.
+<<<<<<< HEAD
+=======
+
+## Login security: one login per account + 1-hour idle logout
+- Only one person can be logged in to an account at a time. A second login attempt (other device/browser) is refused
+  with a message while the first session is active. The same browser may log in again and replaces its own session.
+- Idle logout: after 1 hour with no mouse / keyboard / touch / scroll activity the user is logged out and the account is
+  freed. The server enforces the same limit (change with SESSION_IDLE_MINUTES in server/.env). Background polling
+  (notification bell) does not count as activity; real use sends a keep-alive every 5 minutes.
+- Logout now frees the account on the server. Changing/resetting a password logs that account out everywhere.
+- New columns on crm_users (active_session, session_device, session_seen) are added automatically at server start.
+- QA harness/tests use startSession() instead of signToken().
+>>>>>>> 1e92993 (PDF layout updates, grey bold terms box, project quotation save bar)
